@@ -1,0 +1,17 @@
+{
+  "required": true,
+  "minVersion": "0.8.5",
+  "package": "com.draconicembeddiumfix.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "refmap": "draconicembeddiumfix.refmap.json",
+  "mixins": [],
+  "client": [
+    "MixinBCClientEventHandler"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}

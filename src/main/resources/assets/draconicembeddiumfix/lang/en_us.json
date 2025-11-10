@@ -1,0 +1,13 @@
+{
+  "itemGroup.draconicembeddiumfix": "Example Mod Tab",
+  "block.draconicembeddiumfix.example_block": "Example Block",
+  "item.draconicembeddiumfix.example_item": "Example Item",
+
+  "draconicembeddiumfix.configuration.title": "draconic-embeddium-fix Configs",
+  "draconicembeddiumfix.configuration.section.draconicembeddiumfix.common.toml": "draconic-embeddium-fix Configs",
+  "draconicembeddiumfix.configuration.section.draconicembeddiumfix.common.toml.title": "draconic-embeddium-fix Configs",
+  "draconicembeddiumfix.configuration.items": "Item List",
+  "draconicembeddiumfix.configuration.logDirtBlock": "Log Dirt Block",
+  "draconicembeddiumfix.configuration.magicNumberIntroduction": "Magic Number Text",
+  "draconicembeddiumfix.configuration.magicNumber": "Magic Number"
+}
