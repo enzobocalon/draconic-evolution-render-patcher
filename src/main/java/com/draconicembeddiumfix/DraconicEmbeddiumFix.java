@@ -18,10 +18,8 @@ public class DraconicEmbeddiumFix {
     public static final Logger LOGGER = LoggerFactory.getLogger("DraconicEmbeddiumFix");
 
     public DraconicEmbeddiumFix(IEventBus modEventBus, ModContainer modContainer) {
-        // Registrar config
         modContainer.registerConfig(ModConfig.Type.CLIENT, Config.SPEC);
 
-        // Registrar listener do cliente
         modEventBus.addListener(this::onClientSetup);
     }
 
