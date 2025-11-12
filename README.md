@@ -16,7 +16,7 @@ Draconic Embeddium Fix is a Client-side mod. </br>
 If Iris is installed, the mod will force "allowUnknownShaders" config to be set to true. </br>
 If ImmediatelyFast is installed, the mod will force "hud_batching" config to be set to false.
 
->> You can disable these changes in the config file located at `config/draconicembeddiumfix-client.toml`.
+> You can disable these changes in the config file located at `config/draconicembeddiumfix-client.toml`.
 > By disabling it, each mod will use its own configuration settings.
 
 ## Credits
