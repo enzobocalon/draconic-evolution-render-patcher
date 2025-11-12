@@ -1,25 +1,25 @@
+# Draconic Embeddium Fix
 
-Installation information
-=======
+## About
+A fix for Draconic Evolution and Embeddium Render issues.
 
-This template repository can be directly cloned to get you started with a new
-mod. Simply create a new repository cloned from this one, by following the
-instructions provided by [GitHub](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
+## How it works?
+It changes the render of Brandons Core to use Embeddium's entity system.
 
-Once you have your clone, simply open the repository in the IDE of your choice. The usual recommendation for an IDE is either IntelliJ IDEA or Eclipse.
+## Features
+- Fixes rendering issues with Draconic Evolution when using Embeddium.
+- Have compatibility code to change Iris and ImmediatelyFast configurations to force Draconic's items and entities to be rended.
+- **You can check each compatible mod settings by using /draconicembeddiumfix status command.**
 
-If at any point you are missing libraries in your IDE, or you've run into problems you can
-run `gradlew --refresh-dependencies` to refresh the local cache. `gradlew clean` to reset everything 
-{this does not affect your code} and then start the process again.
+## Important Information
+Draconic Embeddium Fix is a Client-side mod. </br>
+If Iris is installed, the mod will force "allowUnknownShaders" config to be set to true. </br>
+If ImmediatelyFast is installed, the mod will force "hud_batching" config to be set to false.
 
-Mapping Names:
-============
-By default, the MDK is configured to use the official mapping names from Mojang for methods and fields 
-in the Minecraft codebase. These names are covered by a specific license. All modders should be aware of this
-license. For the latest license text, refer to the mapping file itself, or the reference copy here:
-https://github.com/NeoForged/NeoForm/blob/main/Mojang.md
+>> You can disable these changes in the config file located at `config/draconicembeddiumfix-client.toml`.
+> By disabling it, each mod will use its own configuration settings.
 
-Additional Resources: 
-==========
-Community Documentation: https://docs.neoforged.net/  
-NeoForged Discord: https://discord.neoforged.net/
+## Credits
+- [Draconic Evolution](https://www.curseforge.com/minecraft/mc-mods/draconic-evolution) by brandon3055
+- [Brandon's Core](https://www.curseforge.com/minecraft/mc-mods/brandons-core) by brandon3055
+- [Embeddium](https://www.curseforge.com/minecraft/mc-mods/embeddium) by FiniteReality
