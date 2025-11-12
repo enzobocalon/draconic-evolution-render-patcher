@@ -1,7 +1,7 @@
 package com.draconicembeddiumfix.compat;
 
 import com.draconicembeddiumfix.Config;
-import com.draconicembeddiumfix.DraconicEmbeddiumFixClient;
+import com.draconicembeddiumfix.DraconicEmbeddiumFix;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -10,10 +10,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-
 import java.lang.reflect.Field;
-import java.util.List;
 
 public class ImmediatelyFastCompat {
     private static final String MODIFIED_BY_KEY = "_modified_by_DraconicEmbeddiumFix";
@@ -33,12 +30,12 @@ public class ImmediatelyFastCompat {
             hudBatchingField.setAccessible(true);
             hudBatchingField.set(configInstance, false);
 
-            DraconicEmbeddiumFixClient.LOGGER.info("Successfully disabled hud_batching in ImmediatelyFast");
+            DraconicEmbeddiumFix.LOGGER.info("Successfully disabled hud_batching in ImmediatelyFast");
 
         } catch (ClassNotFoundException e) {
-            DraconicEmbeddiumFixClient.LOGGER.warn("ImmediatelyFast not found, skipping config modification");
+            DraconicEmbeddiumFix.LOGGER.warn("ImmediatelyFast not found, skipping config modification");
         } catch (Exception e) {
-            DraconicEmbeddiumFixClient.LOGGER.error("Failed to modify ImmediatelyFast config", e);
+            DraconicEmbeddiumFix.LOGGER.error("Failed to modify ImmediatelyFast config", e);
         }
     }
 
@@ -47,7 +44,7 @@ public class ImmediatelyFastCompat {
             Path configPath = Paths.get("config", "immediatelyfast.json");
 
             if (!Files.exists(configPath)) {
-                DraconicEmbeddiumFixClient.LOGGER.warn("immediatelyfast.json not found");
+                DraconicEmbeddiumFix.LOGGER.warn("immediatelyfast.json not found");
                 return;
             }
 
@@ -63,10 +60,10 @@ public class ImmediatelyFastCompat {
 
             Files.writeString(configPath, GSON.toJson(config));
 
-            DraconicEmbeddiumFixClient.LOGGER.info("Modified immediatelyfast.json");
+            DraconicEmbeddiumFix.LOGGER.info("Modified immediatelyfast.json");
 
         } catch (IOException e) {
-            DraconicEmbeddiumFixClient.LOGGER.error("Failed to modify ImmediatelyFast config", e);
+            DraconicEmbeddiumFix.LOGGER.error("Failed to modify ImmediatelyFast config", e);
         }
     }
 }

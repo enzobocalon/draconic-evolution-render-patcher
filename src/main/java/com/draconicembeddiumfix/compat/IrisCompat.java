@@ -1,7 +1,7 @@
 package com.draconicembeddiumfix.compat;
 
 import com.draconicembeddiumfix.Config;
-import com.draconicembeddiumfix.DraconicEmbeddiumFixClient;
+import com.draconicembeddiumfix.DraconicEmbeddiumFix;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -35,9 +35,9 @@ public class IrisCompat {
             allowUnknownField.set(irisConfig, true);
 
         } catch (NoSuchFieldException e) {
-            DraconicEmbeddiumFixClient.LOGGER.warn("Iris not found, skipping config modification");
+            DraconicEmbeddiumFix.LOGGER.warn("Iris not found, skipping config modification");
         } catch (Exception e) {
-            DraconicEmbeddiumFixClient.LOGGER.error("Failed to modify Iris config", e);
+            DraconicEmbeddiumFix.LOGGER.error("Failed to modify Iris config", e);
         }
     }
 
@@ -46,7 +46,7 @@ public class IrisCompat {
             Path configPath = Paths.get("config", "iris.properties");
 
             if (!Files.exists(configPath)) {
-                DraconicEmbeddiumFixClient.LOGGER.warn("iris.properties not found");
+                DraconicEmbeddiumFix.LOGGER.warn("iris.properties not found");
                 return;
             }
 
@@ -68,7 +68,7 @@ public class IrisCompat {
             Files.write(configPath, lines, StandardOpenOption.TRUNCATE_EXISTING);
 
         } catch (IOException e) {
-            DraconicEmbeddiumFixClient.LOGGER.error("Failed to add comment to iris.properties", e);
+            DraconicEmbeddiumFix.LOGGER.error("Failed to add comment to iris.properties", e);
         }
     }
 }
