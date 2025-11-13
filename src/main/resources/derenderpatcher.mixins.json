@@ -1,9 +1,9 @@
 {
   "required": true,
   "minVersion": "0.8.5",
-  "package": "com.draconicembeddiumfix.mixin",
+  "package": "com.derenderpatcher.mixin",
   "compatibilityLevel": "JAVA_21",
-  "refmap": "draconicembeddiumfix.refmap.json",
+  "refmap": "derenderpatcher.refmap.json",
   "mixins": [],
   "client": [
     "MixinBCClientEventHandler"

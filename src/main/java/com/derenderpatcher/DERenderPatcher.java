@@ -1,7 +1,7 @@
-package com.draconicembeddiumfix;
+package com.derenderpatcher;
 
-import com.draconicembeddiumfix.compat.ImmediatelyFastCompat;
-import com.draconicembeddiumfix.compat.IrisCompat;
+import com.derenderpatcher.compat.ImmediatelyFastCompat;
+import com.derenderpatcher.compat.IrisCompat;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -12,12 +12,12 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Mod(value = DraconicEmbeddiumFix.MOD_ID, dist = Dist.CLIENT)
-public class DraconicEmbeddiumFix {
-    public static final String MOD_ID = "draconicembeddiumfix";
-    public static final Logger LOGGER = LoggerFactory.getLogger("DraconicEmbeddiumFix");
+@Mod(value = DERenderPatcher.MOD_ID, dist = Dist.CLIENT)
+public class DERenderPatcher {
+    public static final String MOD_ID = "derenderpatcher";
+    public static final Logger LOGGER = LoggerFactory.getLogger("derenderpatcher");
 
-    public DraconicEmbeddiumFix(IEventBus modEventBus, ModContainer modContainer) {
+    public DERenderPatcher(IEventBus modEventBus, ModContainer modContainer) {
         modContainer.registerConfig(ModConfig.Type.CLIENT, Config.SPEC);
 
         modEventBus.addListener(this::onClientSetup);

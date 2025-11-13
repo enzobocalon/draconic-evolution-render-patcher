@@ -1,4 +1,4 @@
-package com.draconicembeddiumfix;
+package com.derenderpatcher;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
@@ -11,7 +11,7 @@ import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 
 import java.lang.reflect.Field;
 
-@EventBusSubscriber(modid = DraconicEmbeddiumFix.MOD_ID)
+@EventBusSubscriber(modid = DERenderPatcher.MOD_ID)
 public class DebugCommand {
 
     @SubscribeEvent
@@ -19,7 +19,7 @@ public class DebugCommand {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
 
         dispatcher.register(
-                Commands.literal("draconicembeddiumfix")
+                Commands.literal("derender")
                         .requires(source -> source.hasPermission(0))
                         .then(Commands.literal("status")
                                 .executes(DebugCommand::checkConfig))
@@ -27,11 +27,11 @@ public class DebugCommand {
     }
 
     private static int checkConfig(CommandContext<CommandSourceStack> context) {
-        StringBuilder message = new StringBuilder("§6[Draconic Embeddium Fix Config Status]§r\n\n");
+        StringBuilder message = new StringBuilder("§6[Draconic Render Patcher Fix Config Status]§r\n\n");
 
         boolean isFixEnabled = Config.ENABLE_FIX.get();
 
-        message.append("§e[Draconic Embeddium Fix]§r\n");
+        message.append("§e[Draconic Render Patcher]§r\n");
         message.append("  enableFix: ").append(isFixEnabled)
                 .append(" ").append(isFixEnabled ? "§a✓ ENABLED" : "§c✗ DISABLED").append("\n\n");
 

@@ -1,7 +1,7 @@
-package com.draconicembeddiumfix.compat;
+package com.derenderpatcher.compat;
 
-import com.draconicembeddiumfix.Config;
-import com.draconicembeddiumfix.DraconicEmbeddiumFix;
+import com.derenderpatcher.Config;
+import com.derenderpatcher.DERenderPatcher;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -13,7 +13,7 @@ import java.nio.file.Paths;
 import java.lang.reflect.Field;
 
 public class ImmediatelyFastCompat {
-    private static final String MODIFIED_BY_KEY = "_modified_by_DraconicEmbeddiumFix";
+    private static final String MODIFIED_BY_KEY = "_modified_by_DraconicEvolutionRenderPatcher";
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public static void modifyImmediatelyFastConfig() {
@@ -30,12 +30,12 @@ public class ImmediatelyFastCompat {
             hudBatchingField.setAccessible(true);
             hudBatchingField.set(configInstance, false);
 
-            DraconicEmbeddiumFix.LOGGER.info("Successfully disabled hud_batching in ImmediatelyFast");
+            DERenderPatcher.LOGGER.info("Successfully disabled hud_batching in ImmediatelyFast");
 
         } catch (ClassNotFoundException e) {
-            DraconicEmbeddiumFix.LOGGER.warn("ImmediatelyFast not found, skipping config modification");
+            DERenderPatcher.LOGGER.warn("ImmediatelyFast not found, skipping config modification");
         } catch (Exception e) {
-            DraconicEmbeddiumFix.LOGGER.error("Failed to modify ImmediatelyFast config", e);
+            DERenderPatcher.LOGGER.error("Failed to modify ImmediatelyFast config", e);
         }
     }
 
@@ -44,7 +44,7 @@ public class ImmediatelyFastCompat {
             Path configPath = Paths.get("config", "immediatelyfast.json");
 
             if (!Files.exists(configPath)) {
-                DraconicEmbeddiumFix.LOGGER.warn("immediatelyfast.json not found");
+                DERenderPatcher.LOGGER.warn("immediatelyfast.json not found");
                 return;
             }
 
@@ -55,15 +55,15 @@ public class ImmediatelyFastCompat {
                 return;
             }
 
-            config.addProperty(MODIFIED_BY_KEY, "hud_batching can be set to false by DraconicEmbeddiumFix, overriding the value in this file. Disable this behaviour in DraconicEmbeddiumFix if undesired.");
+            config.addProperty(MODIFIED_BY_KEY, "hud_batching can be set to false by Draconic Evolution Render Patcher, overriding the value in this file. Disable this behaviour in Draconic Evolution Render Patcher if undesired.");
 
 
             Files.writeString(configPath, GSON.toJson(config));
 
-            DraconicEmbeddiumFix.LOGGER.info("Modified immediatelyfast.json");
+            DERenderPatcher.LOGGER.info("Modified immediatelyfast.json");
 
         } catch (IOException e) {
-            DraconicEmbeddiumFix.LOGGER.error("Failed to modify ImmediatelyFast config", e);
+            DERenderPatcher.LOGGER.error("Failed to modify ImmediatelyFast config", e);
         }
     }
 }

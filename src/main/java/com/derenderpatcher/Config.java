@@ -1,4 +1,4 @@
-package com.draconicembeddiumfix;
+package com.derenderpatcher;
 
 import net.neoforged.neoforge.common.ModConfigSpec;
 
@@ -6,7 +6,7 @@ public class Config {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
     public static final ModConfigSpec.BooleanValue ENABLE_FIX = BUILDER
-            .comment("Enable Draconic Embeddium Fix.")
+            .comment("Enable Draconic Render Patch.")
             .define("enableFix", true);
 
     public static final ModConfigSpec.BooleanValue ENABLE_IRIS_COMPAT = BUILDER

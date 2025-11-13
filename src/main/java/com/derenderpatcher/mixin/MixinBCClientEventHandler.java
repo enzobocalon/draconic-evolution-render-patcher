@@ -1,8 +1,8 @@
-package com.draconicembeddiumfix.mixin;
+package com.derenderpatcher.mixin;
 
 import com.brandon3055.brandonscore.client.BCClientEventHandler;
 import com.brandon3055.brandonscore.client.render.BlockEntityRendererTransparent;
-import com.draconicembeddiumfix.Config;
+import com.derenderpatcher.Config;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;

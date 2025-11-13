@@ -1,7 +1,7 @@
-package com.draconicembeddiumfix.compat;
+package com.derenderpatcher.compat;
 
-import com.draconicembeddiumfix.Config;
-import com.draconicembeddiumfix.DraconicEmbeddiumFix;
+import com.derenderpatcher.Config;
+import com.derenderpatcher.DERenderPatcher;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -12,7 +12,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.List;
 
 public class IrisCompat {
-    public static final String COMMENT_MARKER = "# Modified by DraconicEmbeddiumFix";
+    public static final String COMMENT_MARKER = "# Modified by Draconic Evolution Render Patcher";
 
     public static void modifyIrisConfig() {
         try {
@@ -35,9 +35,9 @@ public class IrisCompat {
             allowUnknownField.set(irisConfig, true);
 
         } catch (NoSuchFieldException e) {
-            DraconicEmbeddiumFix.LOGGER.warn("Iris not found, skipping config modification");
+            DERenderPatcher.LOGGER.warn("Iris not found, skipping config modification");
         } catch (Exception e) {
-            DraconicEmbeddiumFix.LOGGER.error("Failed to modify Iris config", e);
+            DERenderPatcher.LOGGER.error("Failed to modify Iris config", e);
         }
     }
 
@@ -46,7 +46,7 @@ public class IrisCompat {
             Path configPath = Paths.get("config", "iris.properties");
 
             if (!Files.exists(configPath)) {
-                DraconicEmbeddiumFix.LOGGER.warn("iris.properties not found");
+                DERenderPatcher.LOGGER.warn("iris.properties not found");
                 return;
             }
 
@@ -60,15 +60,15 @@ public class IrisCompat {
             }
 
             lines.add(0, COMMENT_MARKER);
-            lines.add(1, "# allowUnknownShaders can be set to true by DraconicEmbeddiumFix to ensure proper rendering of Draconic Evolution entities.");
-            lines.add(2, "# DraconicEmbeddiumFix will override allowUnknownShaders value in this file to enable this feature.");
-            lines.add(3, "# Disable this behavior in DraconicEmbeddiumFix config if undesired.");
+            lines.add(1, "# allowUnknownShaders can be set to true by Draconic Evolution Render Patcher to ensure proper rendering of Draconic Evolution entities.");
+            lines.add(2, "# Draconic Evolution Render Patcher will override allowUnknownShaders value in this file to enable this feature.");
+            lines.add(3, "# Disable this behavior in Draconic Evolution Render Patcher's config if undesired.");
             lines.add(4, "");
 
             Files.write(configPath, lines, StandardOpenOption.TRUNCATE_EXISTING);
 
         } catch (IOException e) {
-            DraconicEmbeddiumFix.LOGGER.error("Failed to add comment to iris.properties", e);
+            DERenderPatcher.LOGGER.error("Failed to add comment to iris.properties", e);
         }
     }
 }
