@@ -8,7 +8,7 @@ It changes the render of Brandons Core to use Embeddium's entity system.
 
 ## Features
 - Fixes rendering issues with Draconic Evolution when using Embeddium.
-- Have compatibility code to change Iris and ImmediatelyFast configurations to force Draconic's items and entities to be rended.
+- Has compatibility code to change Iris and ImmediatelyFast configurations to force Draconic's items and entities to be rended.
 - **You can check each compatible mod settings by using "/derender status" command.**
 
 ## Important Information
