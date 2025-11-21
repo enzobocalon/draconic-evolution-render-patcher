@@ -21,6 +21,16 @@ public class DERenderPatcher {
         modContainer.registerConfig(ModConfig.Type.CLIENT, Config.SPEC);
 
         modEventBus.addListener(this::onClientSetup);
+
+        boolean hasEmbeddium = ModList.get().isLoaded("embeddium");
+        boolean hasSodium = ModList.get().isLoaded("sodium");
+
+        if (!hasEmbeddium && !hasSodium) {
+            String errorMsg = "Draconic Evolution Render Patcher requires either Embeddium OR Sodium to function! " +
+                    "Please install one of them.";
+            LOGGER.error(errorMsg);
+            throw new RuntimeException(errorMsg);
+        }
     }
 
     private void onClientSetup(FMLClientSetupEvent event) {

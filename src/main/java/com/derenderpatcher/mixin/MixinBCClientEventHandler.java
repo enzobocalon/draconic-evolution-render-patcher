@@ -3,6 +3,7 @@ package com.derenderpatcher.mixin;
 import com.brandon3055.brandonscore.client.BCClientEventHandler;
 import com.brandon3055.brandonscore.client.render.BlockEntityRendererTransparent;
 import com.derenderpatcher.Config;
+import com.derenderpatcher.compat.RendererCompat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -13,7 +14,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
-import org.embeddedt.embeddium.impl.render.EmbeddiumWorldRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -42,7 +42,7 @@ public class MixinBCClientEventHandler {
         double camY = vec3.y();
         double camZ = vec3.z();
 
-        EmbeddiumWorldRenderer.instance().forEachVisibleBlockEntity(tile -> {
+        RendererCompat.forEachVisibleBlockEntity(tile -> {
             BlockEntityRenderer<BlockEntity> renderer = tileRenderDispatcher.getRenderer(tile);
             if (renderer instanceof BlockEntityRendererTransparent rendererTransparent) {
                 BlockPos pos = tile.getBlockPos();

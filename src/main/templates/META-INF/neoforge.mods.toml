@@ -57,10 +57,10 @@ versionRange="[${draconic_evolution_version},)"
 ordering="NONE"
 side="CLIENT"
 
-# Embeddium - Required
+# Embeddium - Optional - either sodium or embeddium
 [[dependencies.${mod_id}]]
 modId="embeddium"
-type="required"
+type="optional"
 versionRange="[${embeddium_build_version},)"
 ordering="NONE"
 side="CLIENT"
@@ -78,5 +78,13 @@ side="CLIENT"
 modId="iris"
 type="optional"
 versionRange="[${iris_version},)"
+ordering="NONE"
+side="CLIENT"
+
+# Sodium - Optional - either sodium or embeddium
+[[dependencies.${mod_id}]]
+modId="sodium"
+type="optional"
+versionRange="[${sodium_version},)"
 ordering="NONE"
 side="CLIENT"
