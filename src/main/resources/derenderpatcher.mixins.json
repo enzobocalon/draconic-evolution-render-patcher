@@ -6,7 +6,8 @@
   "refmap": "derenderpatcher.refmap.json",
   "mixins": [],
   "client": [
-    "MixinBCClientEventHandler"
+    "MixinBCClientEventHandler",
+    "MixinRenderModularStaff"
   ],
   "injectors": {
     "defaultRequire": 1

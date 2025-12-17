@@ -2,6 +2,7 @@ package com.derenderpatcher.compat;
 
 import com.derenderpatcher.Config;
 import com.derenderpatcher.DERenderPatcher;
+import net.irisshaders.iris.Iris;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
