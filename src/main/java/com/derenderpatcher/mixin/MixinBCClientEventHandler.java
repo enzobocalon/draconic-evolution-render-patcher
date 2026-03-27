@@ -41,6 +41,7 @@ public class MixinBCClientEventHandler {
         double camX = vec3.x();
         double camY = vec3.y();
         double camZ = vec3.z();
+        float partialTick = event.getPartialTick().getGameTimeDeltaPartialTick(false);
 
         RendererCompat.forEachVisibleBlockEntity(tile -> {
             BlockEntityRenderer<BlockEntity> renderer = tileRenderDispatcher.getRenderer(tile);
@@ -52,7 +53,7 @@ public class MixinBCClientEventHandler {
                         camera,
                         rendererTransparent,
                         tile,
-                        event.getPartialTick().getGameTimeDeltaPartialTick(false),
+                        partialTick,
                         poseStack,
                         buffers
                 );
