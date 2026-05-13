@@ -90,10 +90,14 @@ public class MixinRenderTileEnergyCore {
 
     @Unique
     private static RenderType derenderpatcher$createCoreShaderType(String key, int frame, int triangle, int effect) {
+        float[] frameRgb = derenderpatcher$unpack(frame);
+        float[] triangleRgb = derenderpatcher$unpack(triangle);
+        float[] effectRgb = derenderpatcher$unpack(effect);
+
         return RenderType.create("derenderpatcher_energy_core_" + key, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, VertexFormat.Mode.QUADS, 256, false, true, RenderType.CompositeState.builder()
                 .setTextureState(new RenderStateShard.TextureStateShard(DERENDERPATCHER$ENERGY_CORE_OVERLAY, false, false))
                 .setShaderState(new RenderStateShard.ShaderStateShard(() -> {
-                    derenderpatcher$applyCoreUniforms(frame, triangle, effect);
+                    derenderpatcher$applyCoreUniforms(frameRgb, triangleRgb, effectRgb);
                     return DEShaders.energyCoreShader;
                 }))
                 .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
@@ -103,11 +107,7 @@ public class MixinRenderTileEnergyCore {
     }
 
     @Unique
-    private static void derenderpatcher$applyCoreUniforms(int frame, int triangle, int effect) {
-        float[] frameRgb = derenderpatcher$unpack(frame);
-        float[] triangleRgb = derenderpatcher$unpack(triangle);
-        float[] effectRgb = derenderpatcher$unpack(effect);
-
+    private static void derenderpatcher$applyCoreUniforms(float[] frameRgb, float[] triangleRgb, float[] effectRgb) {
         DEShaders.energyCoreActivation.glUniform1f(1);
         DEShaders.energyCoreFrameColour.glUniform3f(frameRgb[0], frameRgb[1], frameRgb[2]);
         DEShaders.energyCoreRotTriColour.glUniform3f(triangleRgb[0], triangleRgb[1], triangleRgb[2]);
@@ -116,7 +116,11 @@ public class MixinRenderTileEnergyCore {
 
     @Unique
     private static float[] derenderpatcher$unpack(int colour) {
-        return new float[]{((colour >> 16) & 0xFF) / 255F, ((colour >> 8) & 0xFF) / 255F, (colour & 0xFF) / 255F};
+        return new float[]{
+                ((colour >> 16) & 0xFF) / 255F,
+                ((colour >> 8) & 0xFF) / 255F,
+                (colour & 0xFF) / 255F
+        };
     }
 
     @Unique
