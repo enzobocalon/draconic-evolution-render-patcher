@@ -1,0 +1,26 @@
+{
+  "required": true,
+  "package": "com.derenderpatcher.mixins",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "mixin.refmap.json",
+  "minVersion": "0.8.5",
+  "mixins": [],
+  "client": [
+    "DelegateRenderTypeAccessor",
+    "MixinBCClientEventHandler",
+    "MixinBufferSegmentRenderer",
+    "MixinIrisRenderingPipeline",
+    "MixinLevelRenderer",
+    "MixinOculusHandRenderer",
+    "MixinRenderEnergyCoreStabilizer",
+    "MixinRenderModularStaff",
+    "MixinRenderTileEnergyCore",
+    "MixinRenderTileReactorComponent",
+    "MixinShaderInstance",
+    "VBORenderTypeAccessor",
+    "MixinVertexBuffer"
+  ],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}
