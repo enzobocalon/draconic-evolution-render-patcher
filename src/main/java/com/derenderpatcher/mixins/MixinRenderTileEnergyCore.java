@@ -9,12 +9,12 @@ import com.brandon3055.draconicevolution.DraconicEvolution;
 import com.brandon3055.draconicevolution.blocks.tileentity.TileEnergyCore;
 import com.brandon3055.draconicevolution.client.DEShaders;
 import com.brandon3055.draconicevolution.client.render.tile.RenderTileEnergyCore;
+import com.derenderpatcher.compat.CompatMods;
+import com.derenderpatcher.compat.RenderFormats;
 import com.derenderpatcher.compat.RenderStateAccess;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormatElement;
-import com.google.common.collect.ImmutableMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -23,7 +23,6 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.fml.ModList;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -49,14 +48,6 @@ public class MixinRenderTileEnergyCore {
     private static final ResourceLocation DERENDERPATCHER$STABILIZER_BEAM = new ResourceLocation(DraconicEvolution.MODID, "textures/block/energy_core/stabilizer_beam.png");
 
     @Unique
-    private static final VertexFormat DERENDERPATCHER$POSITION_COLOR_TEX_LIGHTMAP = new VertexFormat(ImmutableMap.<String, VertexFormatElement>builder()
-            .put("Position", DefaultVertexFormat.ELEMENT_POSITION)
-            .put("Color", DefaultVertexFormat.ELEMENT_COLOR)
-            .put("UV0", DefaultVertexFormat.ELEMENT_UV0)
-            .put("UV2", DefaultVertexFormat.ELEMENT_UV2)
-            .build());
-
-    @Unique
     private static final Map<String, RenderType> DERENDERPATCHER$COLORED_CORE_TYPES = new ConcurrentHashMap<>();
 
     @Mutable
@@ -78,9 +69,6 @@ public class MixinRenderTileEnergyCore {
     @Shadow
     @Final
     private static RenderType outerBeamType;
-
-    @Shadow
-    private static RenderType coreShaderType;
 
     @Unique
     private RenderType derenderpatcher$currentCoreShaderType;
@@ -141,7 +129,7 @@ public class MixinRenderTileEnergyCore {
 
     @Unique
     private static boolean derenderpatcher$isOculusLoaded() {
-        return ModList.get().isLoaded("oculus");
+        return CompatMods.isOculusLoaded();
     }
 
     @Inject(method = "renderFancyOuterCore", at = @At("HEAD"))
@@ -197,7 +185,7 @@ public class MixinRenderTileEnergyCore {
         float[] triangleRgb = derenderpatcher$unpack(triangle);
         float[] effectRgb = derenderpatcher$unpack(effect);
 
-        return RenderType.create("derenderpatcher_energy_core_" + key, DERENDERPATCHER$POSITION_COLOR_TEX_LIGHTMAP, VertexFormat.Mode.QUADS, 256, false, true, RenderType.CompositeState.builder()
+        return RenderType.create("derenderpatcher_energy_core_" + key, RenderFormats.positionColorTexLightmap(), VertexFormat.Mode.QUADS, 256, false, true, RenderType.CompositeState.builder()
                 .setTextureState(new RenderStateShard.TextureStateShard(DERENDERPATCHER$ENERGY_CORE_OVERLAY, false, false))
                 .setShaderState(new RenderStateShard.ShaderStateShard(() -> {
                     derenderpatcher$applyCoreUniforms(frameRgb, triangleRgb, effectRgb);

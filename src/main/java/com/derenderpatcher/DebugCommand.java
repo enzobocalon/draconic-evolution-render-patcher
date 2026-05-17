@@ -2,12 +2,12 @@ package com.derenderpatcher;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
+import com.derenderpatcher.compat.CompatMods;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = DERenderPatcher.MOD_ID, value = net.minecraftforge.api.distmarker.Dist.CLIENT)
@@ -41,7 +41,7 @@ public final class DebugCommand {
     }
 
     private static void appendImmediatelyFastStatus(StringBuilder message) {
-        if (ModList.get().isLoaded("immediatelyfast")) {
+        if (CompatMods.isImmediatelyFastLoaded()) {
             message.append("  ImmediatelyFast: ").append(ENABLED).append("\n");
             message.append("  §e⚠ If you find HUD/item rendering issues, try running without ImmediatelyFast or adjusting its config.§r\n");
         } else {

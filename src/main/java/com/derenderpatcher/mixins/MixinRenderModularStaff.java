@@ -4,10 +4,10 @@ import codechicken.lib.render.CCRenderState;
 import codechicken.lib.vec.Matrix4;
 import codechicken.lib.vec.Vector3;
 import com.brandon3055.draconicevolution.client.render.item.RenderModularStaff;
+import com.derenderpatcher.compat.CompatMods;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fml.ModList;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -24,7 +24,7 @@ public class MixinRenderModularStaff {
             )
     )
     private void derenderpatcher$fixStaffEffectTransform(CCRenderState ccrs, ItemStack stack, ItemDisplayContext transform, Matrix4 mat, MultiBufferSource buffers, boolean gui, CallbackInfo ci) {
-        if (ModList.get().isLoaded("oculus")) {
+        if (CompatMods.isOculusLoaded()) {
             mat.translate(0.5, -0.1, 0.5);
             mat.rotate(derenderpatcher$toRadians(-90), Vector3.X_NEG);
         }

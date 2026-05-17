@@ -29,4 +29,8 @@ public final class RenderStateAccess extends RenderType {
     public static RenderStateShard.LightmapStateShard lightmap() {
         return LIGHTMAP;
     }
+
+    public static RenderStateShard.TransparencyStateShard lightningTransparency() {
+        return LIGHTNING_TRANSPARENCY;
+    }
 }
