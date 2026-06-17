@@ -2,12 +2,14 @@
   "required": true,
   "minVersion": "0.8.5",
   "package": "com.derenderpatcher.mixin",
+  "plugin": "com.derenderpatcher.mixin.DERenderPatcherMixinPlugin",
   "compatibilityLevel": "JAVA_21",
   "refmap": "derenderpatcher.refmap.json",
   "mixins": [],
   "client": [
     "MixinBCClientEventHandler",
     "MixinDraconiumChestTileRenderer",
+    "MixinIrisConfig",
     "MixinRenderTileEnergyCore",
     "MixinRenderModularStaff"
   ],
