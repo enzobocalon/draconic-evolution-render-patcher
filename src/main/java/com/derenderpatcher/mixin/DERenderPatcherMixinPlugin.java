@@ -53,14 +53,28 @@ public class DERenderPatcherMixinPlugin implements IMixinConfigPlugin {
     }
 
     private static boolean isModLoaded(String modId) {
-        try {
-            ModList modList = ModList.get();
-            if (modList != null) {
-                return modList.isLoaded(modId);
-            }
-        } catch (IllegalStateException ignored) {
+        if (isModLoadedFromRuntimeList(modId)) {
+            return true;
         }
 
-        return LoadingModList.get().getModFileById(modId) != null;
+        return isModLoadedFromLoadingList(modId);
+    }
+
+    private static boolean isModLoadedFromRuntimeList(String modId) {
+        try {
+            ModList modList = ModList.get();
+            return modList != null && modList.isLoaded(modId);
+        } catch (RuntimeException ignored) {
+            return false;
+        }
+    }
+
+    private static boolean isModLoadedFromLoadingList(String modId) {
+        try {
+            LoadingModList loadingModList = LoadingModList.get();
+            return loadingModList != null && loadingModList.getModFileById(modId) != null;
+        } catch (RuntimeException ignored) {
+            return false;
+        }
     }
 }
