@@ -1,7 +1,7 @@
 package com.derenderpatcher;
 
 import com.derenderpatcher.compat.ImmediatelyFastCompat;
-import com.derenderpatcher.compat.IrisCompat;
+import com.derenderpatcher.compat.LegacyConfigCleanup;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -19,7 +19,6 @@ public class DERenderPatcher {
 
     public DERenderPatcher(IEventBus modEventBus, ModContainer modContainer) {
         modContainer.registerConfig(ModConfig.Type.CLIENT, Config.SPEC);
-
         modEventBus.addListener(this::onClientSetup);
 
         boolean hasEmbeddium = ModList.get().isLoaded("embeddium");
@@ -35,17 +34,8 @@ public class DERenderPatcher {
 
     private void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
-            if (ModList.get().isLoaded("iris")) {
-                LOGGER.info("Iris found.");
-                IrisCompat.modifyIrisConfig();
-                IrisCompat.generateIrisConfigComment();
-            }
-
-            if (ModList.get().isLoaded("immediatelyfast")) {
-                LOGGER.info("ImmediatelyFast found.");
-                ImmediatelyFastCompat.modifyImmediatelyFastConfig();
-                ImmediatelyFastCompat.generateImmediatelyFastConfigComment();
-            }
+            LegacyConfigCleanup.cleanup();
+            ImmediatelyFastCompat.applyRuntimeOverride();
         });
     }
 }
