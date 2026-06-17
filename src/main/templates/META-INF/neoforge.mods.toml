@@ -70,7 +70,7 @@ side="CLIENT"
 modId="immediatelyfast"
 type="optional"
 versionRange="[${immediately_fast_version},)"
-ordering="NONE"
+ordering="AFTER"
 side="CLIENT"
 
 # Iris - Optional
@@ -78,7 +78,7 @@ side="CLIENT"
 modId="iris"
 type="optional"
 versionRange="[${iris_version},)"
-ordering="NONE"
+ordering="AFTER"
 side="CLIENT"
 
 # Sodium - Optional - either sodium or embeddium
