@@ -14,7 +14,7 @@ public class Config {
             .define("enableIrisCompat", true);
 
     public static final ModConfigSpec.BooleanValue ENABLE_IMMEDIATELYFAST_COMPAT = BUILDER
-            .comment("Force hud_batching to false in ImmediatelyFast to ensure Draconic Evolution's items can render in hud. This will try to override ImmediatelyFast settings.")
+            .comment("Force ImmediatelyFast runtime hud_batching to false to ensure Draconic Evolution's items can render in hud.")
             .define("enableImmediatelyFastCompat", true);
 
     static final ModConfigSpec SPEC = BUILDER.build();
