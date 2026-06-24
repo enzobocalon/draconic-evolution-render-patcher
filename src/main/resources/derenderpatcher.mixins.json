@@ -6,9 +6,11 @@
   "minVersion": "0.8.5",
   "mixins": [],
   "client": [
+    "ClientInitAccessor",
     "DelegateRenderTypeAccessor",
     "MixinBCClientEventHandler",
     "MixinBufferSegmentRenderer",
+    "MixinClientInit",
     "MixinIrisRenderingPipeline",
     "MixinLevelRenderer",
     "MixinOculusHandRenderer",
@@ -17,6 +19,7 @@
     "MixinRenderTileEnergyCore",
     "MixinRenderTileReactorComponent",
     "MixinShaderInstance",
+    "ModelRegistryHelperAccessor",
     "VBORenderTypeAccessor",
     "MixinVertexBuffer"
   ],

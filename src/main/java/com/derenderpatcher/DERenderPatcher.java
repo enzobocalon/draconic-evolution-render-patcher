@@ -1,7 +1,10 @@
 package com.derenderpatcher;
 
+import com.derenderpatcher.compat.FancyToolModelCompat;
 import com.mojang.logging.LogUtils;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
@@ -18,6 +21,9 @@ public final class DERenderPatcher {
             LOGGER.error(errorMsg);
             throw new RuntimeException(errorMsg);
         }
+
+        IEventBus modBus = context.getModEventBus();
+        modBus.addListener(EventPriority.LOWEST, FancyToolModelCompat::onModifyBakingResult);
 
         LOGGER.info("Loaded Draconic Evolution Render Patcher");
     }
