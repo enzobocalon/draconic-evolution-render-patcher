@@ -2,7 +2,7 @@ package com.derenderpatcher;
 
 import net.neoforged.neoforge.common.ModConfigSpec;
 
-public class Config {
+public final class Config {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
     public static final ModConfigSpec.BooleanValue ENABLE_FIX = BUILDER
@@ -14,9 +14,19 @@ public class Config {
             .define("enableIrisCompat", true);
 
     public static final ModConfigSpec.BooleanValue ENABLE_IMMEDIATELYFAST_COMPAT = BUILDER
-            .comment("Force ImmediatelyFast runtime hud_batching to false to ensure Draconic Evolution's items can render in hud.")
+            .comment("Force ImmediatelyFast runtime HUD and screen batching off to ensure Draconic Evolution's items render correctly.")
             .define("enableImmediatelyFastCompat", true);
 
     static final ModConfigSpec SPEC = BUILDER.build();
 
+    private Config() {
+    }
+
+    public static boolean isEnabled(ModConfigSpec.BooleanValue value) {
+        try {
+            return value.get();
+        } catch (IllegalStateException ignored) {
+            return true;
+        }
+    }
 }

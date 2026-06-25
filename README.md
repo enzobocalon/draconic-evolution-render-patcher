@@ -8,14 +8,14 @@ It changes the render of Brandons Core to use Embeddium's or Sodium's entity sys
 
 ## Features
 - Fixes rendering issues with Draconic Evolution when using Embeddium/Sodium.
-- Has compatibility code to change Iris and ImmediatelyFast configurations to force Draconic's items and entities to be rended.
+- Has compatibility code to override Iris and ImmediatelyFast runtime settings so Draconic's items and entities render correctly.
 - **You can check each compatible mod settings by using "/derender status" command.**
 
 ## Important Information
 Draconic Evolution Render Patcher is a Client-side mod. </br>
 Remember to use either Sodium or Embeddium. </br>
 If Iris is installed, the mod will force "allowUnknownShaders" config to be set to true. </br>
-If ImmediatelyFast is installed, the mod will force "hud_batching" config to be set to false.
+If ImmediatelyFast is installed, the mod will disable runtime HUD and experimental screen batching.
 
 > You can disable these changes in the config file located at `config/derenderpatcher-client.toml`.
 > By disabling it, each mod will use its own configuration settings.

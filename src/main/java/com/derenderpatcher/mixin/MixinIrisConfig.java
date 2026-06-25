@@ -10,16 +10,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinIrisConfig {
     @Inject(method = "shouldAllowUnknownShaders", at = @At("HEAD"), cancellable = true)
     private void derenderpatcher$allowUnknownShaders(CallbackInfoReturnable<Boolean> cir) {
-        if (isIrisCompatEnabled()) {
+        if (Config.isEnabled(Config.ENABLE_IRIS_COMPAT)) {
             cir.setReturnValue(true);
-        }
-    }
-
-    private static boolean isIrisCompatEnabled() {
-        try {
-            return Config.ENABLE_IRIS_COMPAT.get();
-        } catch (IllegalStateException e) {
-            return true;
         }
     }
 }
