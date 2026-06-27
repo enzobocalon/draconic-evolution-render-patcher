@@ -16,12 +16,38 @@ public class MixinVertexBuffer {
             method = "_drawWithShader",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/renderer/ShaderInstance;apply()V",
-                    shift = At.Shift.AFTER
+                    target = "Lcom/mojang/blaze3d/vertex/VertexBuffer;draw()V"
             ),
             require = 0
     )
-    private void derenderpatcher$bindPipelineWriteTargetAfterShaderApply(Matrix4f modelViewMatrix, Matrix4f projectionMatrix, ShaderInstance shader, CallbackInfo ci) {
+    private void derenderpatcher$bindPipelineWriteTargetBeforeDraw(Matrix4f modelViewMatrix, Matrix4f projectionMatrix, ShaderInstance shader, CallbackInfo ci) {
+        derenderpatcher$bindPipelineWriteTargetBeforeVertexBufferDraw(shader);
+    }
+
+    @Inject(
+            method = "m_166876_(Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lnet/minecraft/client/renderer/ShaderInstance;)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lcom/mojang/blaze3d/vertex/VertexBuffer;m_166882_()V",
+                    remap = false
+            ),
+            require = 0,
+            remap = false
+    )
+    private void derenderpatcher$bindPipelineWriteTargetBeforeDrawSrg(Matrix4f modelViewMatrix, Matrix4f projectionMatrix, ShaderInstance shader, CallbackInfo ci) {
+        derenderpatcher$bindPipelineWriteTargetBeforeVertexBufferDraw(shader);
+    }
+
+    private void derenderpatcher$bindPipelineWriteTargetBeforeVertexBufferDraw(ShaderInstance shader) {
+        if (ShaderCompat.isDraconicRenderActive()) {
+            ShaderCompat.debugOnce(
+                    "vertex-buffer-draconic-shader:" + shader.getName(),
+                    () -> "Draconic shader reached VertexBuffer draw after shader apply. shader=" + shader.getName()
+                            + ", allowed=" + ShaderCompat.shouldAllowUnknownShader(shader)
+                            + "; " + ShaderCompat.describeCompatState()
+            );
+        }
+
         if (ShaderCompat.shouldAllowUnknownShader(shader)) {
             DepthColorStorage.unlockDepthColor();
             ShaderCompat.bindPipelineWriteTargetAfterShaderApplyBeforeDraw(shader);

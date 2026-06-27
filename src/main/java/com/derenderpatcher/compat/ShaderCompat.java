@@ -9,16 +9,29 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 public final class ShaderCompat {
+    private static final boolean DEBUG_LOGGING_ENABLED = Boolean.getBoolean("derenderpatcher.debug");
     private static final Map<WorldRenderingPipeline, Runnable> PIPELINE_WRITE_TARGET_BINDERS = new WeakHashMap<>();
+    private static final Set<String> DEBUG_MESSAGES = ConcurrentHashMap.newKeySet();
+
     private static int worldRenderDepth;
     private static int brandonsCoreTransparentPassDepth;
     private static int handRenderDepth;
+    private static int draconicRenderDepth;
 
     public static void registerPipelineWriteTarget(WorldRenderingPipeline pipeline, Runnable writeTargetBinder) {
         PIPELINE_WRITE_TARGET_BINDERS.put(pipeline, writeTargetBinder);
+        debugOnce(
+                "pipeline-write-target-registered:" + System.identityHashCode(pipeline),
+                () -> "Registered Oculus pipeline write target binder. pipeline="
+                        + pipeline.getClass().getName()
+                        + '@' + Integer.toHexString(System.identityHashCode(pipeline))
+        );
     }
 
     private static boolean isOculusPipelineActive() {
@@ -62,8 +75,18 @@ public final class ShaderCompat {
         return isOculusPipelineActive() && isWorldViewRendering() && handRenderDepth > 0;
     }
 
+    public static void enterDraconicRender() {
+        draconicRenderDepth++;
+    }
+
+    public static void exitDraconicRender() {
+        if (draconicRenderDepth > 0) {
+            draconicRenderDepth--;
+        }
+    }
+
     private static boolean isCompatRenderPassActive() {
-        if (!isWorldViewRendering()) {
+        if (!isClientLevelActive()) {
             return false;
         }
 
@@ -72,6 +95,10 @@ public final class ShaderCompat {
 
     private static boolean isWorldViewRendering() {
         return Minecraft.getInstance().level != null && worldRenderDepth > 0;
+    }
+
+    private static boolean isClientLevelActive() {
+        return Minecraft.getInstance().level != null;
     }
 
     private static boolean isCompatPipelinePhaseActive() {
@@ -91,7 +118,31 @@ public final class ShaderCompat {
         return !ShadowRenderer.ACTIVE
                 && isOculusPipelineActive()
                 && isCompatRenderPassActive()
+                && draconicRenderDepth > 0
                 && shader instanceof CCShaderInstance;
+    }
+
+    public static boolean isDraconicRenderActive() {
+        return draconicRenderDepth > 0;
+    }
+
+    public static String describeCompatState() {
+        WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+        WorldRenderingPhase phase = pipeline == null ? null : pipeline.getPhase();
+        return "oculusPipeline=" + (pipeline != null)
+                + ", shadow=" + ShadowRenderer.ACTIVE
+                + ", worldDepth=" + worldRenderDepth
+                + ", brandonsTransparentDepth=" + brandonsCoreTransparentPassDepth
+                + ", handDepth=" + handRenderDepth
+                + ", draconicDepth=" + draconicRenderDepth
+                + ", phase=" + phase
+                + ", compatPass=" + isCompatRenderPassActive();
+    }
+
+    public static void debugOnce(String key, Supplier<String> messageSupplier) {
+        if (DEBUG_LOGGING_ENABLED && DEBUG_MESSAGES.add(key)) {
+            com.derenderpatcher.DERenderPatcher.LOGGER.info("[DE Render Patcher debug] {}", messageSupplier.get());
+        }
     }
 
     public static void allowUnknownShaderOutput(ShaderInstance shader) {
@@ -102,25 +153,42 @@ public final class ShaderCompat {
         bindPipelineWriteTarget();
     }
 
-    public static void bindPipelineWriteTargetBeforeBatchedVboDraw() {
-        if (!isOculusPipelineActive() || !isCompatRenderPassActive() || ShadowRenderer.ACTIVE) {
-            return;
+    public static boolean bindPipelineWriteTargetBeforeBatchedVboDraw() {
+        if (!isOculusPipelineActive() || !isCompatRenderPassActive() || ShadowRenderer.ACTIVE || draconicRenderDepth <= 0) {
+            return false;
         }
 
-        bindPipelineWriteTarget();
+        return bindPipelineWriteTarget();
     }
 
     public static void bindPipelineWriteTargetAfterShaderApplyBeforeDraw(ShaderInstance shader) {
         allowUnknownShaderOutput(shader);
     }
 
-    private static void bindPipelineWriteTarget() {
+    private static boolean bindPipelineWriteTarget() {
         // Switch writes to the write target registered for the current Oculus pipeline.
         WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
         Runnable writeTargetBinder = PIPELINE_WRITE_TARGET_BINDERS.get(pipeline);
         if (writeTargetBinder != null) {
             writeTargetBinder.run();
+            debugOnce(
+                    "pipeline-write-target-bound:" + System.identityHashCode(pipeline),
+                    () -> "Bound registered Oculus pipeline write target. pipeline="
+                            + pipeline.getClass().getName()
+                            + '@' + Integer.toHexString(System.identityHashCode(pipeline))
+                            + "; " + describeCompatState()
+            );
+            return true;
         }
+
+        debugOnce(
+                "pipeline-write-target-missing:" + (pipeline == null ? "null" : System.identityHashCode(pipeline)),
+                () -> "No registered Oculus pipeline write target binder was found. pipeline="
+                        + (pipeline == null ? "null" : pipeline.getClass().getName() + '@' + Integer.toHexString(System.identityHashCode(pipeline)))
+                        + ", registeredBinders=" + PIPELINE_WRITE_TARGET_BINDERS.size()
+                        + "; " + describeCompatState()
+        );
+        return false;
     }
 
     public static void bindMainTargetIfNeeded(ShaderInstance shader) {

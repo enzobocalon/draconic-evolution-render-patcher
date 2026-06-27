@@ -75,7 +75,7 @@ public class MixinRenderTileEnergyCore {
 
     @Inject(method = "<clinit>", at = @At("RETURN"))
     private static void derenderpatcher$replaceEnergyCoreRenderTypes(CallbackInfo ci) {
-        if (!derenderpatcher$isOculusLoaded()) {
+        if (!CompatMods.isOculusLoaded()) {
             return;
         }
 
@@ -117,7 +117,7 @@ public class MixinRenderTileEnergyCore {
             )
     )
     private void derenderpatcher$renderBuildGuideWithVanillaBuffer(Level level, BlockPos inWorldOrigin, PoseStack poseStack, MultiBufferSource getter, MultiBlockDefinition structure, int packedLight, float partialTicks) {
-        if (!derenderpatcher$isOculusLoaded()) {
+        if (!CompatMods.isOculusLoaded()) {
             MultiBlockRenderers.renderBuildGuide(level, inWorldOrigin, poseStack, getter, structure, packedLight, partialTicks);
             return;
         }
@@ -125,11 +125,6 @@ public class MixinRenderTileEnergyCore {
         MultiBufferSource.BufferSource safeGetter = Minecraft.getInstance().renderBuffers().bufferSource();
         MultiBlockRenderers.renderBuildGuide(level, inWorldOrigin, poseStack, safeGetter, structure, packedLight, partialTicks);
         safeGetter.endBatch();
-    }
-
-    @Unique
-    private static boolean derenderpatcher$isOculusLoaded() {
-        return CompatMods.isOculusLoaded();
     }
 
     @Inject(method = "renderFancyOuterCore", at = @At("HEAD"))

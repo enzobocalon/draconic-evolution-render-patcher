@@ -6,10 +6,12 @@ import com.derenderpatcher.DERenderPatcher;
 import com.derenderpatcher.mixins.ClientInitAccessor;
 import com.derenderpatcher.mixins.ModelRegistryHelperAccessor;
 import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
@@ -45,16 +47,37 @@ public final class FancyToolModelCompat {
             return;
         }
 
+        int reapplied = reapplyDraconicModels(event.getModels());
+        DERenderPatcher.LOGGER.info(
+                "Reapplied {} Draconic Evolution custom models after Forge model baking",
+                reapplied
+        );
+    }
+
+    public static void onBakingCompleted(ModelEvent.BakingCompleted event) {
+        if (!shouldUseFancyToolModels()) {
+            return;
+        }
+
+        Map<ResourceLocation, BakedModel> bakedRegistry = getBakedRegistry(event.getModelManager());
+        int reapplied = reapplyDraconicModels(bakedRegistry);
+
+        DERenderPatcher.LOGGER.info(
+                "Reapplied {} Draconic Evolution custom models after final model baking",
+                reapplied
+        );
+    }
+
+    private static int reapplyDraconicModels(Map<ResourceLocation, BakedModel> models) {
         List<Pair<ModelResourceLocation, BakedModel>> registeredModels = getDraconicRegisteredModels();
-        Map<ResourceLocation, BakedModel> models = event.getModels();
         for (Pair<ModelResourceLocation, BakedModel> pair : registeredModels) {
             models.put(pair.getKey(), pair.getValue());
         }
+        return registeredModels.size();
+    }
 
-        DERenderPatcher.LOGGER.info(
-                "Reapplied {} Draconic Evolution custom models after Forge model baking",
-                registeredModels.size()
-        );
+    private static Map<ResourceLocation, BakedModel> getBakedRegistry(ModelManager modelManager) {
+        return ObfuscationReflectionHelper.getPrivateValue(ModelManager.class, modelManager, "f_119397_");
     }
 
     private static List<Pair<ModelResourceLocation, BakedModel>> getDraconicRegisteredModels() {

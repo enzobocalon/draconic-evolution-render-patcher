@@ -24,6 +24,7 @@ public final class DERenderPatcher {
 
         IEventBus modBus = context.getModEventBus();
         modBus.addListener(EventPriority.LOWEST, FancyToolModelCompat::onModifyBakingResult);
+        modBus.addListener(EventPriority.LOWEST, FancyToolModelCompat::onBakingCompleted);
 
         LOGGER.info("Loaded Draconic Evolution Render Patcher");
     }

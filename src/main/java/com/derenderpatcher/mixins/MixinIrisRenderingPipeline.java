@@ -36,6 +36,14 @@ public class MixinIrisRenderingPipeline {
         derenderpatcher$writeTargetAfterTranslucent = flippedAfterTranslucent.contains(colorTarget)
                 ? renderTargets.createFramebufferWritingToAlt(new int[] { colorTarget })
                 : renderTargets.createFramebufferWritingToMain(new int[] { colorTarget });
+        ShaderCompat.debugOnce(
+                "pipeline-write-target-created:" + System.identityHashCode(this),
+                () -> "Created Oculus pipeline write targets. pipeline="
+                        + getClass().getName()
+                        + '@' + Integer.toHexString(System.identityHashCode(this))
+                        + ", beforeTranslucentWritesAlt=" + flippedAfterPrepare.contains(colorTarget)
+                        + ", afterTranslucentWritesAlt=" + flippedAfterTranslucent.contains(colorTarget)
+        );
         ShaderCompat.registerPipelineWriteTarget((WorldRenderingPipeline) (Object) this, this::derenderpatcher$bindPipelineWriteTarget);
     }
 
@@ -43,8 +51,20 @@ public class MixinIrisRenderingPipeline {
     private void derenderpatcher$bindPipelineWriteTarget() {
         if (isBeforeTranslucent) {
             derenderpatcher$writeTargetBeforeTranslucent.bind();
+            ShaderCompat.debugOnce(
+                    "pipeline-write-target-before:" + System.identityHashCode(this),
+                    () -> "Using Oculus before-translucent write target for Draconic render. pipeline="
+                            + getClass().getName()
+                            + '@' + Integer.toHexString(System.identityHashCode(this))
+            );
         } else {
             derenderpatcher$writeTargetAfterTranslucent.bind();
+            ShaderCompat.debugOnce(
+                    "pipeline-write-target-after:" + System.identityHashCode(this),
+                    () -> "Using Oculus after-translucent write target for Draconic render. pipeline="
+                            + getClass().getName()
+                            + '@' + Integer.toHexString(System.identityHashCode(this))
+            );
         }
     }
 }
