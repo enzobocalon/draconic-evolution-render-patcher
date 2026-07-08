@@ -15,6 +15,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinOculusHandRenderer {
     @Inject(method = "renderSolid", at = @At("HEAD"), require = 0)
     private void derenderpatcher$enterSolidHandPass(PoseStack poseStack, float tickDelta, Camera camera, GameRenderer gameRenderer, WorldRenderingPipeline pipeline, CallbackInfo ci) {
+        if (!ShaderCompat.isShaderPackInUse()) {
+            return;
+        }
+
         ShaderCompat.enterHandRenderPass();
     }
 
@@ -25,6 +29,10 @@ public class MixinOculusHandRenderer {
 
     @Inject(method = "renderTranslucent", at = @At("HEAD"), require = 0)
     private void derenderpatcher$enterTranslucentHandPass(PoseStack poseStack, float tickDelta, Camera camera, GameRenderer gameRenderer, WorldRenderingPipeline pipeline, CallbackInfo ci) {
+        if (!ShaderCompat.isShaderPackInUse()) {
+            return;
+        }
+
         ShaderCompat.enterHandRenderPass();
     }
 

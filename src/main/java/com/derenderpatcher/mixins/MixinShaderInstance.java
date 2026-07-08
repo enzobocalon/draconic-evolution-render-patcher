@@ -25,6 +25,7 @@ public class MixinShaderInstance {
         if (ShaderCompat.shouldAllowUnknownShader(shader)) {
             DepthColorStorage.unlockDepthColor();
             ShaderCompat.allowUnknownShaderOutput(shader);
+            ShaderCompat.applyPendingShaderUniforms(shader);
         }
     }
 
@@ -34,6 +35,7 @@ public class MixinShaderInstance {
         if (ShaderCompat.shouldAllowUnknownShader(shader)) {
             DepthColorStorage.unlockDepthColor();
             ShaderCompat.allowUnknownShaderOutput(shader);
+            ShaderCompat.applyPendingShaderUniforms(shader);
         }
     }
 

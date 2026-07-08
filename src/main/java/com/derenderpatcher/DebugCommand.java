@@ -9,7 +9,6 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 
 import java.util.List;
@@ -92,14 +91,7 @@ public final class DebugCommand {
     }
 
     private static String getModVersion() {
-        try {
-            return ModList.get()
-                    .getModContainerById(DERenderPatcher.MOD_ID)
-                    .map(container -> container.getModInfo().getVersion().toString())
-                    .orElse("unknown");
-        } catch (RuntimeException ignored) {
-            return "unknown";
-        }
+        return CompatMods.getModVersion(DERenderPatcher.MOD_ID);
     }
 
     private static String enabledText(boolean value) {

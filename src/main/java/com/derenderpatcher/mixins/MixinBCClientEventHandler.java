@@ -24,6 +24,10 @@ public class MixinBCClientEventHandler {
             MultiBufferSource buffers,
             CallbackInfo ci
     ) {
+        if (!ShaderCompat.isShaderPackInUse()) {
+            return;
+        }
+
         ShaderCompat.enterBrandonsCoreTransparentPass();
     }
 

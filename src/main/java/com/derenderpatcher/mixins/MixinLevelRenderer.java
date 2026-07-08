@@ -18,6 +18,10 @@ public class MixinLevelRenderer {
     private void derenderpatcher$enterWorldRender(PoseStack poseStack, float partialTick, long finishTimeNano,
                                                   boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
                                                   LightTexture lightTexture, Matrix4f projectionMatrix, CallbackInfo ci) {
+        if (!ShaderCompat.isShaderPackInUse()) {
+            return;
+        }
+
         ShaderCompat.enterWorldRender();
     }
 
