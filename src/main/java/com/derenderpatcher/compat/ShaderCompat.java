@@ -42,7 +42,8 @@ public final class ShaderCompat {
         }
 
         try {
-            return IrisApi.getInstance().isShaderPackInUse();
+            IrisApi irisApi = IrisApi.getInstance();
+            return irisApi.isShaderPackInUse() && irisApi.getConfig().areShadersEnabled();
         } catch (RuntimeException | LinkageError ignored) {
             return false;
         }
@@ -100,7 +101,10 @@ public final class ShaderCompat {
             return false;
         }
 
-        return brandonsCoreTransparentPassDepth > 0 || handRenderDepth > 0 || isCompatPipelinePhaseActive();
+        return brandonsCoreTransparentPassDepth > 0
+                || handRenderDepth > 0
+                || (draconicRenderDepth > 0 && isWorldViewRendering())
+                || isCompatPipelinePhaseActive();
     }
 
     private static boolean isWorldViewRendering() {
@@ -128,7 +132,7 @@ public final class ShaderCompat {
                 || phase == WorldRenderingPhase.BLOCK_ENTITIES;
     }
 
-public static boolean shouldAllowUnknownShader(ShaderInstance shader) {
+    public static boolean shouldAllowUnknownShader(ShaderInstance shader) {
         return isShaderPackInUse()
                 && !isShadowRendererActive()
                 && isCompatRenderPassActive()

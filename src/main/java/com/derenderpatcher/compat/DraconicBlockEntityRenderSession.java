@@ -1,19 +1,17 @@
 package com.derenderpatcher.compat;
 
 import codechicken.lib.render.CCRenderState;
+import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.irisshaders.iris.layer.BlockEntityRenderStateShard;
 import net.irisshaders.iris.layer.OuterWrappedRenderType;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Owns the per-tile render session lifecycle for the Draconic block entities we patch.
  *
- * <p>A session wraps one private {@link ResettableBufferSource} and the iris
+ * <p>A session owns one private immediate buffer and the Iris
  * {@code BlockEntityRenderStateShard} phase-bracketing needed so our draws
  * land on the right Oculus pipeline write target with the right shader
  * uniforms, without ever touching the shared Embeddium/Oculus batched
@@ -22,10 +20,9 @@ import java.util.List;
  * <p>Contract:
  * <ul>
  *   <li>{@link #enter()} at the {@code render()} HEAD of the tile renderer.</li>
- *   <li>{@link #prepareForBind()} at the HEAD of any inner sub-method that does
- *       its own {@code ccrs.bind} + flush cycle.</li>
  *   <li>{@link #bind} at every {@code ccrs.bind(type, getter)} site we redirect.</li>
- *   <li>{@link #flush()} at any intermediate flush point; idempotent.</li>
+ *   <li>Each bind first finalizes a pending batch before starting the next one.</li>
+ *   <li>{@link #flush()} at any intermediate flush point; it is a no-op without pending geometry.</li>
  *   <li>{@link #exit()} at the {@code render()} RETURN; calls {@link #flush()}
  *       as a safety net.</li>
  * </ul>
@@ -34,12 +31,12 @@ import java.util.List;
  * to the original passthrough, so vanilla behaviour is unchanged.
  */
 public final class DraconicBlockEntityRenderSession {
-    private final ResettableBufferSource buffers;
-    private final List<RenderType> pending = new ArrayList<>();
+    private final MultiBufferSource.BufferSource buffers;
     private boolean active;
+    private boolean hasPendingBatch;
 
     public DraconicBlockEntityRenderSession(int initialBytes) {
-        this.buffers = new ResettableBufferSource(initialBytes);
+        this.buffers = MultiBufferSource.immediate(new BufferBuilder(initialBytes));
     }
 
     public boolean isActive() {
@@ -56,20 +53,17 @@ public final class DraconicBlockEntityRenderSession {
     }
 
     public void exit() {
-        flush();
-        if (this.active) {
-            ShaderCompat.exitDraconicRender();
-        }
-        this.active = false;
-    }
-
-    public void prepareForBind() {
         if (!this.active) {
             return;
         }
 
-        this.buffers.resetBufferState();
-        this.pending.clear();
+        try {
+            flush();
+        } finally {
+            this.hasPendingBatch = false;
+            this.active = false;
+            ShaderCompat.exitDraconicRender();
+        }
     }
 
     public void bind(CCRenderState ccrs, RenderType type, MultiBufferSource original) {
@@ -78,11 +72,10 @@ public final class DraconicBlockEntityRenderSession {
             return;
         }
 
+        flush();
         RenderType wrapped = wrap(type);
-        if (!this.pending.contains(wrapped)) {
-            this.pending.add(wrapped);
-        }
         ccrs.bind(wrapped, this.buffers);
+        this.hasPendingBatch = true;
     }
 
     public void bind(CCRenderState ccrs, RenderType type, MultiBufferSource original, PoseStack poseStack) {
@@ -91,24 +84,23 @@ public final class DraconicBlockEntityRenderSession {
             return;
         }
 
+        flush();
         RenderType wrapped = wrap(type);
-        if (!this.pending.contains(wrapped)) {
-            this.pending.add(wrapped);
-        }
         ccrs.bind(wrapped, this.buffers, poseStack);
+        this.hasPendingBatch = true;
     }
 
     public void flush() {
-        if (!this.active || this.pending.isEmpty()) {
+        if (!this.active || !this.hasPendingBatch) {
             return;
         }
 
-        ShaderCompat.bindPipelineWriteTargetBeforeBatchedVboDraw();
-        for (RenderType type : this.pending) {
-            this.buffers.endBatch(type);
+        try {
+            ShaderCompat.bindPipelineWriteTargetBeforeBatchedVboDraw();
+            this.buffers.endBatch();
+        } finally {
+            this.hasPendingBatch = false;
         }
-        this.buffers.resetBufferState();
-        this.pending.clear();
     }
 
     private static RenderType wrap(RenderType type) {

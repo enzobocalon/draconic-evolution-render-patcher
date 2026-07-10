@@ -25,13 +25,14 @@ public class MixinBufferSegmentRenderer {
             "reactor_type",
             "crystal_type",
             "shield_type",
+            // Upstream RenderTileReactorCore.REACTOR_BEAM_TYPE intentionally uses this typo.
             "beam_typess",
             "inner_beam",
             "outer_beam",
             "modeleffecttype"
     };
 
-    @Inject(method = "drawInner", at = @At("HEAD"), cancellable = true, require = 0)
+    @Inject(method = "drawInner", at = @At("HEAD"), cancellable = true)
     private void derenderpatcher$drawCodeChickenVbo(BufferSegment segment, CallbackInfo ci) {
         RenderType renderType = segment.type();
         if (!derenderpatcher$isDraconicRenderType(renderType)) {
@@ -39,57 +40,53 @@ public class MixinBufferSegmentRenderer {
         }
 
         ShaderCompat.enterDraconicRender();
+        try {
+            VBORenderType vboRenderType = derenderpatcher$findVboRenderType(renderType);
+            if (vboRenderType == null) {
+                derenderpatcher$bindDraconicCompositeRenderType(renderType);
+                return;
+            }
 
-        VBORenderType vboRenderType = derenderpatcher$findVboRenderType(renderType);
-        if (vboRenderType == null) {
-            derenderpatcher$bindDraconicCompositeRenderType(renderType);
-            return;
-        }
-
-        if (ShaderCompat.isDebugLoggingEnabled()) {
-            ShaderCompat.debugOnce(
-                    "batched-vbo:" + derenderpatcher$debugKey(vboRenderType),
-                    () -> "Rendering CodeChicken batched VBO through Oculus path. typeChain="
-                            + derenderpatcher$describeRenderTypeChain(renderType)
-                            + "; " + ShaderCompat.describeCompatState()
-            );
-        }
-
-        DepthColorStorage.unlockDepthColor();
-        boolean shaderPackInUse = ShaderCompat.isShaderPackInUse();
-        if (shaderPackInUse && !ShaderCompat.bindPipelineWriteTargetBeforeBatchedVboDraw()) {
             if (ShaderCompat.isDebugLoggingEnabled()) {
                 ShaderCompat.debugOnce(
-                        "batched-vbo-skipped-bind:" + derenderpatcher$debugKey(vboRenderType),
-                        () -> "Leaving CodeChicken batched VBO on the original Oculus draw path because the compat target is not active. typeChain="
+                        "batched-vbo:" + derenderpatcher$debugKey(vboRenderType),
+                        () -> "Rendering CodeChicken batched VBO through Oculus path. typeChain="
                                 + derenderpatcher$describeRenderTypeChain(renderType)
                                 + "; " + ShaderCompat.describeCompatState()
                 );
             }
-            return;
-        }
 
-        if (ShaderCompat.isDebugLoggingEnabled()) {
-            ShaderCompat.debugOnce(
-                    "batched-vbo-private:" + derenderpatcher$debugKey(vboRenderType) + ":shaderpack=" + shaderPackInUse,
-                    () -> "Delegated CodeChicken batched VBO render through private VBO path. typeChain="
-                            + derenderpatcher$describeRenderTypeChain(renderType)
-                            + "; segmentEmpty=" + segment.renderedBuffer().isEmpty()
-                            + "; " + ShaderCompat.describeCompatState()
-            );
-        }
+            DepthColorStorage.unlockDepthColor();
+            boolean shaderPackInUse = ShaderCompat.isShaderPackInUse();
+            if (shaderPackInUse && !ShaderCompat.bindPipelineWriteTargetBeforeBatchedVboDraw()) {
+                if (ShaderCompat.isDebugLoggingEnabled()) {
+                    ShaderCompat.debugOnce(
+                            "batched-vbo-skipped-bind:" + derenderpatcher$debugKey(vboRenderType),
+                            () -> "Leaving CodeChicken batched VBO on the original Oculus draw path because the compat target is not active. typeChain="
+                                    + derenderpatcher$describeRenderTypeChain(renderType)
+                                    + "; " + ShaderCompat.describeCompatState()
+                    );
+                }
+                return;
+            }
 
-        try {
-            ((VBORenderTypeAccessor) vboRenderType).derenderpatcher$render();
-            ci.cancel();
+            if (ShaderCompat.isDebugLoggingEnabled()) {
+                ShaderCompat.debugOnce(
+                        "batched-vbo-private:" + derenderpatcher$debugKey(vboRenderType) + ":shaderpack=" + shaderPackInUse,
+                        () -> "Delegated CodeChicken batched VBO render through private VBO path. typeChain="
+                                + derenderpatcher$describeRenderTypeChain(renderType)
+                                + "; segmentEmpty=" + segment.renderedBuffer().isEmpty()
+                                + "; " + ShaderCompat.describeCompatState()
+                );
+            }
+
+            try {
+                ((VBORenderTypeAccessor) vboRenderType).derenderpatcher$render();
+                ci.cancel();
+            } finally {
+                segment.renderedBuffer().release();
+            }
         } finally {
-            ShaderCompat.exitDraconicRender();
-        }
-    }
-
-    @Inject(method = "drawInner", at = @At("RETURN"), require = 0)
-    private void derenderpatcher$exitDraconicDraw(BufferSegment segment, CallbackInfo ci) {
-        if (derenderpatcher$isDraconicRenderType(segment.type())) {
             ShaderCompat.exitDraconicRender();
         }
     }
@@ -103,17 +100,7 @@ public class MixinBufferSegmentRenderer {
                 return vboRenderType;
             }
 
-            if (cursor instanceof WrappableRenderType wrappableRenderType) {
-                cursor = wrappableRenderType.unwrap();
-                continue;
-            }
-
-            if (cursor instanceof DelegateRenderType) {
-                cursor = ((DelegateRenderTypeAccessor) cursor).derenderpatcher$getParent();
-                continue;
-            }
-
-            break;
+            cursor = derenderpatcher$nextWrappedRenderType(cursor);
         }
 
         return null;
@@ -153,17 +140,7 @@ public class MixinBufferSegmentRenderer {
 
             chain.append(cursor.getClass().getName()).append('[').append(cursor).append(']');
 
-            if (cursor instanceof WrappableRenderType wrappableRenderType) {
-                cursor = wrappableRenderType.unwrap();
-                continue;
-            }
-
-            if (cursor instanceof DelegateRenderType) {
-                cursor = ((DelegateRenderTypeAccessor) cursor).derenderpatcher$getParent();
-                continue;
-            }
-
-            break;
+            cursor = derenderpatcher$nextWrappedRenderType(cursor);
         }
 
         return chain.toString();
@@ -199,19 +176,22 @@ public class MixinBufferSegmentRenderer {
                 return true;
             }
 
-            if (cursor instanceof WrappableRenderType wrappableRenderType) {
-                cursor = wrappableRenderType.unwrap();
-                continue;
-            }
-
-            if (cursor instanceof DelegateRenderType) {
-                cursor = ((DelegateRenderTypeAccessor) cursor).derenderpatcher$getParent();
-                continue;
-            }
-
-            break;
+            cursor = derenderpatcher$nextWrappedRenderType(cursor);
         }
 
         return false;
+    }
+
+    @Unique
+    private static RenderType derenderpatcher$nextWrappedRenderType(RenderType type) {
+        if (type instanceof WrappableRenderType wrappableRenderType) {
+            return wrappableRenderType.unwrap();
+        }
+
+        if (type instanceof DelegateRenderType) {
+            return ((DelegateRenderTypeAccessor) type).derenderpatcher$getParent();
+        }
+
+        return null;
     }
 }

@@ -277,25 +277,11 @@ public class MixinRenderTileEnergyCore {
         }
     }
 
-    @Inject(method = {"renderInnerCore", "renderLegacyOuterCore"}, at = @At("HEAD"))
-    private void derenderpatcher$prepareCoreBuffer(TileEnergyCore te, CCRenderState ccrs, Matrix4 mat,
-                                                    MultiBufferSource getter, float partialTicks, float rotation,
-                                                    double scale, CallbackInfo ci) {
-        derenderpatcher$session.prepareForBind();
-    }
-
     @Inject(method = {"renderInnerCore", "renderLegacyOuterCore"}, at = @At("RETURN"))
     private void derenderpatcher$flushCoreBuffer(TileEnergyCore te, CCRenderState ccrs, Matrix4 mat,
                                                  MultiBufferSource getter, float partialTicks, float rotation,
                                                  double scale, CallbackInfo ci) {
         derenderpatcher$session.flush();
-    }
-
-    @Inject(method = "renderFancyOuterCore", at = @At("HEAD"))
-    private void derenderpatcher$prepareFancyCoreBuffer(TileEnergyCore te, CCRenderState ccrs, Matrix4 mat,
-                                                        MultiBufferSource getter, float partialTicks, float rotation,
-                                                        double scale, CallbackInfo ci) {
-        derenderpatcher$session.prepareForBind();
     }
 
     @Inject(method = "renderFancyOuterCore", at = @At("RETURN"))
@@ -306,9 +292,9 @@ public class MixinRenderTileEnergyCore {
     }
 
     @Inject(method = "renderStabilizers", at = @At("HEAD"), cancellable = true)
-    private void derenderpatcher$renderStabilizersWithResettableBuffer(TileEnergyCore te, CCRenderState ccrs, Matrix4 matrix4,
-                                                                       MultiBufferSource getter, float partialTick,
-                                                                       CallbackInfo ci) {
+    private void derenderpatcher$renderStabilizersWithPrivateBuffers(TileEnergyCore te, CCRenderState ccrs, Matrix4 matrix4,
+                                                                     MultiBufferSource getter, float partialTick,
+                                                                     CallbackInfo ci) {
         if (!ShaderCompat.isShaderPackInUse()) {
             return;
         }

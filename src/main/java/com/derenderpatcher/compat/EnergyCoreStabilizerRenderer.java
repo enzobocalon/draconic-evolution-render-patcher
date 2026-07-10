@@ -8,6 +8,7 @@ import codechicken.lib.vec.Vector3;
 import com.brandon3055.draconicevolution.client.handler.ClientEventHandler;
 import com.brandon3055.brandonscore.lib.datamanager.ManagedPos;
 import com.brandon3055.draconicevolution.blocks.tileentity.TileEnergyCore;
+import com.mojang.blaze3d.vertex.BufferBuilder;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
@@ -15,7 +16,7 @@ import net.minecraft.core.Direction;
 
 /**
  * Reimplements {@code RenderTileEnergyCore.renderStabilizers} on a private
- * set of {@link ResettableBufferSource}s so the stabilizer sphere + beam
+ * set of private immediate buffers so the stabilizer sphere + beam
  * geometry never touches the shared Embeddium/Oculus batched
  * {@code MultiBufferSource}.
  *
@@ -25,9 +26,10 @@ import net.minecraft.core.Direction;
  * {@code renderStabilizerBeam} shadow via the {@link BeamRenderer} callback.
  */
 public final class EnergyCoreStabilizerRenderer {
-    private final ResettableBufferSource stabilizerBuffers = new ResettableBufferSource(512 * 1024);
-    private final ResettableBufferSource innerBeamBuffers = new ResettableBufferSource(64 * 1024);
-    private final ResettableBufferSource outerBeamBuffers = new ResettableBufferSource(64 * 1024);
+    private final MultiBufferSource.BufferSource innerStabilizerBuffers = MultiBufferSource.immediate(new BufferBuilder(512 * 1024));
+    private final MultiBufferSource.BufferSource outerStabilizerBuffers = MultiBufferSource.immediate(new BufferBuilder(512 * 1024));
+    private final MultiBufferSource.BufferSource innerBeamBuffers = MultiBufferSource.immediate(new BufferBuilder(64 * 1024));
+    private final MultiBufferSource.BufferSource outerBeamBuffers = MultiBufferSource.immediate(new BufferBuilder(64 * 1024));
 
     public void renderStabilizers(
             TileEnergyCore te,
@@ -40,10 +42,6 @@ public final class EnergyCoreStabilizerRenderer {
             RenderType beamType,
             RenderType outerBeamType,
             BeamRenderer beamRenderer) {
-
-        stabilizerBuffers.resetBufferState();
-        innerBeamBuffers.resetBufferState();
-        outerBeamBuffers.resetBufferState();
 
         if (!te.stabilizersValid.get()) {
             return;
@@ -83,7 +81,7 @@ public final class EnergyCoreStabilizerRenderer {
                 innerMat.rotate(
                         (ClientEventHandler.elapsedTicks + partialTick) * MathHelper.torad,
                         new Vector3(0, -1, 0));
-                ccrs.bind(innerStabType, stabilizerBuffers);
+                ccrs.bind(innerStabType, innerStabilizerBuffers);
                 modelStabilizerSphere.render(ccrs, innerMat);
 
                 mat.scale(1.1F, 1.1F, 1.1F);
@@ -92,17 +90,15 @@ public final class EnergyCoreStabilizerRenderer {
                 mat.rotate(
                         (ClientEventHandler.elapsedTicks + partialTick) * 0.5F * MathHelper.torad,
                         new Vector3(0, 1, 0));
-                ccrs.bind(outerStabType, stabilizerBuffers);
+                ccrs.bind(outerStabType, outerStabilizerBuffers);
                 modelStabilizerSphere.render(ccrs, mat);
             }
         } finally {
             ShaderCompat.bindPipelineWriteTargetBeforeBatchedVboDraw();
             innerBeamBuffers.endBatch();
             outerBeamBuffers.endBatch();
-            stabilizerBuffers.endBatch();
-            innerBeamBuffers.resetBufferState();
-            outerBeamBuffers.resetBufferState();
-            stabilizerBuffers.resetBufferState();
+            innerStabilizerBuffers.endBatch();
+            outerStabilizerBuffers.endBatch();
         }
     }
 
@@ -114,7 +110,7 @@ public final class EnergyCoreStabilizerRenderer {
             if (renderType == outerBeamType) {
                 return outerBeamBuffers.getBuffer(renderType);
             }
-            return stabilizerBuffers.getBuffer(renderType);
+            throw new IllegalArgumentException("Unexpected Energy Core beam RenderType: " + renderType);
         };
     }
 

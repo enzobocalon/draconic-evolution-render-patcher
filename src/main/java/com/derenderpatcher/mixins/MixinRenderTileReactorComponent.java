@@ -7,8 +7,8 @@ import com.brandon3055.draconicevolution.DraconicEvolution;
 import com.brandon3055.draconicevolution.client.render.tile.RenderTileReactorComponent;
 import com.derenderpatcher.compat.CompatMods;
 import com.derenderpatcher.compat.RenderStateAccess;
-import com.derenderpatcher.compat.ResettableBufferSource;
 import com.derenderpatcher.compat.ShaderCompat;
+import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
@@ -55,7 +55,8 @@ public abstract class MixinRenderTileReactorComponent implements BlockEntityRend
     }
 
     @Unique
-    private final ResettableBufferSource derenderpatcher$reactorComponentBuffers = new ResettableBufferSource(512 * 1024);
+    private final MultiBufferSource.BufferSource derenderpatcher$reactorComponentBuffers =
+            MultiBufferSource.immediate(new BufferBuilder(512 * 1024));
 
     @Unique
     private boolean derenderpatcher$usingReactorComponentBuffer;
@@ -89,7 +90,6 @@ public abstract class MixinRenderTileReactorComponent implements BlockEntityRend
             return;
         }
 
-        derenderpatcher$reactorComponentBuffers.resetBufferState();
         ShaderCompat.enterDraconicRender();
     }
 
@@ -100,9 +100,9 @@ public abstract class MixinRenderTileReactorComponent implements BlockEntityRend
                     target = "Lcom/brandon3055/draconicevolution/client/render/tile/RenderTileReactorComponent;renderStabilizer(Lcodechicken/lib/render/CCRenderState;Lcodechicken/lib/vec/Matrix4;Lnet/minecraft/client/renderer/MultiBufferSource;FFII)V"
             )
     )
-    private void derenderpatcher$renderStabilizerWithResettableBuffer(CCRenderState ccrs, Matrix4 mat, MultiBufferSource getter,
-                                                                     float rotation, float brightness, int packedLight,
-                                                                     int packedOverlay) {
+    private void derenderpatcher$renderStabilizerWithPrivateBuffer(CCRenderState ccrs, Matrix4 mat, MultiBufferSource getter,
+                                                                  float rotation, float brightness, int packedLight,
+                                                                  int packedOverlay) {
         renderStabilizer(ccrs, mat, derenderpatcher$getReactorComponentBufferOrOriginal(getter), rotation, brightness, packedLight, packedOverlay);
     }
 
@@ -113,8 +113,8 @@ public abstract class MixinRenderTileReactorComponent implements BlockEntityRend
                     target = "Lcom/brandon3055/draconicevolution/client/render/tile/RenderTileReactorComponent;renderInjector(Lcodechicken/lib/render/CCRenderState;Lcodechicken/lib/vec/Matrix4;Lnet/minecraft/client/renderer/MultiBufferSource;FII)V"
             )
     )
-    private void derenderpatcher$renderInjectorWithResettableBuffer(CCRenderState ccrs, Matrix4 mat, MultiBufferSource getter,
-                                                                   float brightness, int packedLight, int packedOverlay) {
+    private void derenderpatcher$renderInjectorWithPrivateBuffer(CCRenderState ccrs, Matrix4 mat, MultiBufferSource getter,
+                                                                float brightness, int packedLight, int packedOverlay) {
         renderInjector(ccrs, mat, derenderpatcher$getReactorComponentBufferOrOriginal(getter), brightness, packedLight, packedOverlay);
     }
 
@@ -124,7 +124,6 @@ public abstract class MixinRenderTileReactorComponent implements BlockEntityRend
                                                            CallbackInfo ci) {
         if (derenderpatcher$usingReactorComponentBuffer) {
             derenderpatcher$reactorComponentBuffers.endBatch();
-            derenderpatcher$reactorComponentBuffers.resetBufferState();
             ShaderCompat.exitDraconicRender();
         }
 

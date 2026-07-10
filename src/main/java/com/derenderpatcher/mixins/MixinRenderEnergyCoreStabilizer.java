@@ -65,7 +65,6 @@ public abstract class MixinRenderEnergyCoreStabilizer implements BlockEntityRend
                                                        PoseStack poseStack, MultiBufferSource getter,
                                                        int packedLight, int packedOverlay, CallbackInfo ci) {
         derenderpatcher$session.enter();
-        derenderpatcher$session.prepareForBind();
     }
 
     @Redirect(
