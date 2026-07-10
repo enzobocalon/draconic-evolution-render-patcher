@@ -30,6 +30,10 @@ public final class RenderStateAccess extends RenderType {
         return LIGHTMAP;
     }
 
+    public static RenderStateShard.OverlayStateShard overlay() {
+        return OVERLAY;
+    }
+
     public static RenderStateShard.TransparencyStateShard lightningTransparency() {
         return LIGHTNING_TRANSPARENCY;
     }

@@ -15,8 +15,13 @@
     "MixinLevelRenderer",
     "MixinOculusHandRenderer",
     "MixinRenderEnergyCoreStabilizer",
+    "MixinRenderItemEnergyCrystal",
+    "MixinRenderItemReactorComponent",
     "MixinRenderModularStaff",
     "MixinRenderTileEnergyCore",
+    "MixinRenderTileEnergyCrystal",
+    "MixinRenderTileEnergyTransfuser",
+    "MixinRenderTileReactorCore",
     "MixinRenderTileReactorComponent",
     "MixinShaderInstance",
     "ModelRegistryHelperAccessor",
@@ -24,6 +29,6 @@
     "MixinVertexBuffer"
   ],
   "injectors": {
-    "defaultRequire": 0
+    "defaultRequire": 1
   }
 }

@@ -14,14 +14,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LevelRenderer.class)
 public class MixinLevelRenderer {
-    @Inject(method = "renderLevel", at = @At("HEAD"))
+    @Inject(method = {"renderLevel", "m_109599_"}, at = @At("HEAD"), remap = false)
     private void derenderpatcher$enterWorldRender(PoseStack poseStack, float partialTick, long finishTimeNano,
                                                   boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
                                                   LightTexture lightTexture, Matrix4f projectionMatrix, CallbackInfo ci) {
+        if (!ShaderCompat.isShaderPackInUse()) {
+            return;
+        }
+
         ShaderCompat.enterWorldRender();
     }
 
-    @Inject(method = "renderLevel", at = @At("RETURN"))
+    @Inject(method = {"renderLevel", "m_109599_"}, at = @At("RETURN"), remap = false)
     private void derenderpatcher$exitWorldRender(PoseStack poseStack, float partialTick, long finishTimeNano,
                                                  boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
                                                  LightTexture lightTexture, Matrix4f projectionMatrix, CallbackInfo ci) {

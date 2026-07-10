@@ -1,8 +1,8 @@
 package com.derenderpatcher.mixins;
 
+import codechicken.lib.render.CCModel;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.vec.Matrix4;
-import com.brandon3055.brandonscore.client.shader.BCShaders;
 import com.brandon3055.brandonscore.client.render.MultiBlockRenderers;
 import com.brandon3055.brandonscore.multiblock.MultiBlockDefinition;
 import com.brandon3055.draconicevolution.DraconicEvolution;
@@ -10,10 +10,14 @@ import com.brandon3055.draconicevolution.blocks.tileentity.TileEnergyCore;
 import com.brandon3055.draconicevolution.client.DEShaders;
 import com.brandon3055.draconicevolution.client.render.tile.RenderTileEnergyCore;
 import com.derenderpatcher.compat.CompatMods;
+import com.derenderpatcher.compat.DraconicBlockEntityRenderSession;
+import com.derenderpatcher.compat.EnergyCoreShaderTypes;
+import com.derenderpatcher.compat.EnergyCoreStabilizerRenderer;
 import com.derenderpatcher.compat.RenderFormats;
 import com.derenderpatcher.compat.RenderStateAccess;
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.derenderpatcher.compat.ShaderCompat;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
@@ -33,22 +37,33 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 @Mixin(value = RenderTileEnergyCore.class, remap = false)
 public class MixinRenderTileEnergyCore {
     @Unique
-    private static final ResourceLocation DERENDERPATCHER$ENERGY_CORE_OVERLAY = new ResourceLocation(DraconicEvolution.MODID, "textures/block/energy_core/energy_core_overlay.png");
+    private static final ResourceLocation DERENDERPATCHER$ENERGY_CORE_BASE =
+            new ResourceLocation(DraconicEvolution.MODID, "textures/block/energy_core/energy_core_base.png");
 
     @Unique
-    private static final ResourceLocation DERENDERPATCHER$STABILIZER_SPHERE = new ResourceLocation(DraconicEvolution.MODID, "textures/block/energy_core/stabilizer_sphere.png");
+    private static final ResourceLocation DERENDERPATCHER$ENERGY_CORE_OVERLAY =
+            new ResourceLocation(DraconicEvolution.MODID, "textures/block/energy_core/energy_core_overlay.png");
 
     @Unique
-    private static final ResourceLocation DERENDERPATCHER$STABILIZER_BEAM = new ResourceLocation(DraconicEvolution.MODID, "textures/block/energy_core/stabilizer_beam.png");
+    private static final ResourceLocation DERENDERPATCHER$STABILIZER_SPHERE =
+            new ResourceLocation(DraconicEvolution.MODID, "textures/block/energy_core/stabilizer_sphere.png");
 
     @Unique
-    private static final Map<String, RenderType> DERENDERPATCHER$COLORED_CORE_TYPES = new ConcurrentHashMap<>();
+    private static final ResourceLocation DERENDERPATCHER$STABILIZER_BEAM =
+            new ResourceLocation(DraconicEvolution.MODID, "textures/block/energy_core/stabilizer_beam.png");
+
+    @Mutable
+    @Shadow
+    @Final
+    private static RenderType innerCoreType;
+
+    @Mutable
+    @Shadow
+    @Final
+    private static RenderType outerCoreType;
 
     @Mutable
     @Shadow
@@ -70,8 +85,22 @@ public class MixinRenderTileEnergyCore {
     @Final
     private static RenderType outerBeamType;
 
+    @Shadow
+    private static RenderType coreShaderType;
+
+    @Shadow
+    @Final
+    private CCModel modelStabilizerSphere;
+
+    @Shadow
+    private void renderStabilizerBeam(TileEnergyCore te, Matrix4 matrix4, MultiBufferSource getter, BlockPos vec, float partialTick) {
+    }
+
     @Unique
-    private RenderType derenderpatcher$currentCoreShaderType;
+    private final DraconicBlockEntityRenderSession derenderpatcher$session = new DraconicBlockEntityRenderSession(512 * 1024);
+
+    @Unique
+    private final EnergyCoreStabilizerRenderer derenderpatcher$stabilizerRenderer = new EnergyCoreStabilizerRenderer();
 
     @Inject(method = "<clinit>", at = @At("RETURN"))
     private static void derenderpatcher$replaceEnergyCoreRenderTypes(CallbackInfo ci) {
@@ -79,34 +108,76 @@ public class MixinRenderTileEnergyCore {
             return;
         }
 
-        innerStabType = RenderType.create("derenderpatcher_inner_stab", DefaultVertexFormat.POSITION_COLOR_TEX, VertexFormat.Mode.QUADS, 256, false, true, RenderType.CompositeState.builder()
-                .setTextureState(new RenderStateShard.TextureStateShard(DERENDERPATCHER$STABILIZER_SPHERE, false, false))
-                .setShaderState(new RenderStateShard.ShaderStateShard(() -> BCShaders.posColourTexAlpha0))
-                .setTransparencyState(RenderStateAccess.noTransparency())
-                .createCompositeState(false)
-        );
+        innerCoreType = derenderpatcher$createEntitySolidType("inner_core", DERENDERPATCHER$ENERGY_CORE_BASE);
 
-        outerStabType = RenderType.create("derenderpatcher_outer_stab", DefaultVertexFormat.POSITION_COLOR_TEX, VertexFormat.Mode.QUADS, 256, false, true, RenderType.CompositeState.builder()
-                .setTextureState(new RenderStateShard.TextureStateShard(DERENDERPATCHER$STABILIZER_SPHERE, false, false))
-                .setShaderState(new RenderStateShard.ShaderStateShard(() -> BCShaders.posColourTexAlpha0))
-                .setTransparencyState(RenderStateAccess.translucentTransparency())
-                .createCompositeState(false)
-        );
+        outerCoreType = RenderType.create(
+                DraconicEvolution.MODID + ":derenderpatcher_outer_core",
+                RenderFormats.newEntity(), VertexFormat.Mode.QUADS, 256, false, true,
+                RenderType.CompositeState.builder()
+                        .setTextureState(new RenderStateShard.TextureStateShard(DERENDERPATCHER$ENERGY_CORE_OVERLAY, false, false))
+                        .setShaderState(new RenderStateShard.ShaderStateShard(() -> com.brandon3055.brandonscore.client.shader.BCShaders.posColourTexAlpha0))
+                        .setTransparencyState(RenderStateAccess.translucentTransparency())
+                        .createCompositeState(false));
 
-        beamType = RenderType.create("derenderpatcher_inner_beam", DefaultVertexFormat.POSITION_TEX, VertexFormat.Mode.QUADS, 256, false, true, RenderType.CompositeState.builder()
-                .setTextureState(new RenderStateShard.TextureStateShard(DERENDERPATCHER$STABILIZER_BEAM, false, false))
-                .setShaderState(new RenderStateShard.ShaderStateShard(GameRenderer::getPositionTexShader))
-                .setTransparencyState(RenderStateAccess.translucentTransparency())
-                .createCompositeState(false)
-        );
+        innerStabType = RenderType.create(
+                DraconicEvolution.MODID + ":derenderpatcher_inner_stab",
+                RenderFormats.positionColorTexLightmap(), VertexFormat.Mode.QUADS, 256, false, true,
+                RenderType.CompositeState.builder()
+                        .setTextureState(new RenderStateShard.TextureStateShard(DERENDERPATCHER$STABILIZER_SPHERE, false, false))
+                        .setShaderState(new RenderStateShard.ShaderStateShard(() -> com.brandon3055.brandonscore.client.shader.BCShaders.posColourTexAlpha0))
+                        .setTransparencyState(RenderStateAccess.noTransparency())
+                        .createCompositeState(false));
 
-        outerBeamType = RenderType.create("derenderpatcher_outer_beam", DefaultVertexFormat.POSITION_COLOR_TEX, VertexFormat.Mode.TRIANGLE_STRIP, 256, false, false, RenderType.CompositeState.builder()
-                .setTextureState(new RenderStateShard.TextureStateShard(DERENDERPATCHER$STABILIZER_BEAM, false, false))
-                .setShaderState(new RenderStateShard.ShaderStateShard(() -> BCShaders.posColourTexAlpha0))
-                .setTransparencyState(RenderStateAccess.translucentTransparency())
-                .setWriteMaskState(RenderStateAccess.colorWrite())
-                .createCompositeState(false)
-        );
+        outerStabType = RenderType.create(
+                DraconicEvolution.MODID + ":derenderpatcher_outer_stab",
+                RenderFormats.positionColorTexLightmap(), VertexFormat.Mode.QUADS, 256, false, true,
+                RenderType.CompositeState.builder()
+                        .setTextureState(new RenderStateShard.TextureStateShard(DERENDERPATCHER$STABILIZER_SPHERE, false, false))
+                        .setShaderState(new RenderStateShard.ShaderStateShard(() -> com.brandon3055.brandonscore.client.shader.BCShaders.posColourTexAlpha0))
+                        .setTransparencyState(RenderStateAccess.translucentTransparency())
+                        .createCompositeState(false));
+
+        beamType = RenderType.create(
+                "derenderpatcher_inner_beam",
+                DefaultVertexFormat.POSITION_TEX, VertexFormat.Mode.QUADS, 256, false, true,
+                RenderType.CompositeState.builder()
+                        .setTextureState(new RenderStateShard.TextureStateShard(DERENDERPATCHER$STABILIZER_BEAM, false, false))
+                        .setShaderState(new RenderStateShard.ShaderStateShard(GameRenderer::getPositionTexShader))
+                        .setTransparencyState(RenderStateAccess.translucentTransparency())
+                        .createCompositeState(false));
+
+        outerBeamType = RenderType.create(
+                "derenderpatcher_outer_beam",
+                DefaultVertexFormat.POSITION_COLOR_TEX, VertexFormat.Mode.TRIANGLE_STRIP, 256, false, false,
+                RenderType.CompositeState.builder()
+                        .setTextureState(new RenderStateShard.TextureStateShard(DERENDERPATCHER$STABILIZER_BEAM, false, false))
+                        .setShaderState(new RenderStateShard.ShaderStateShard(() -> com.brandon3055.brandonscore.client.shader.BCShaders.posColourTexAlpha0))
+                        .setTransparencyState(RenderStateAccess.translucentTransparency())
+                        .setWriteMaskState(RenderStateAccess.colorWrite())
+                        .createCompositeState(false));
+
+        coreShaderType = RenderType.create(
+                DraconicEvolution.MODID + ":derenderpatcher_energy_core_shader",
+                RenderFormats.positionColorTexLightmap(), VertexFormat.Mode.QUADS, 256, false, true,
+                RenderType.CompositeState.builder()
+                        .setTextureState(new RenderStateShard.TextureStateShard(DERENDERPATCHER$ENERGY_CORE_OVERLAY, false, false))
+                        .setShaderState(new RenderStateShard.ShaderStateShard(() -> DEShaders.energyCoreShader))
+                        .setTransparencyState(RenderStateAccess.translucentTransparency())
+                        .setCullState(RenderStateAccess.noCull())
+                        .createCompositeState(false));
+    }
+
+    @Unique
+    private static RenderType derenderpatcher$createEntitySolidType(String name, ResourceLocation texture) {
+        return RenderType.create(
+                DraconicEvolution.MODID + ":derenderpatcher_" + name,
+                RenderFormats.newEntity(), VertexFormat.Mode.QUADS, 256, true, false,
+                RenderType.CompositeState.builder()
+                        .setTextureState(new RenderStateShard.TextureStateShard(texture, false, false))
+                        .setShaderState(new RenderStateShard.ShaderStateShard(GameRenderer::getRendertypeEntitySolidShader))
+                        .setLightmapState(RenderStateAccess.lightmap())
+                        .setOverlayState(RenderStateAccess.overlay())
+                        .createCompositeState(true));
     }
 
     @Redirect(
@@ -116,8 +187,10 @@ public class MixinRenderTileEnergyCore {
                     target = "Lcom/brandon3055/brandonscore/client/render/MultiBlockRenderers;renderBuildGuide(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;Lcom/brandon3055/brandonscore/multiblock/MultiBlockDefinition;IF)V"
             )
     )
-    private void derenderpatcher$renderBuildGuideWithVanillaBuffer(Level level, BlockPos inWorldOrigin, PoseStack poseStack, MultiBufferSource getter, MultiBlockDefinition structure, int packedLight, float partialTicks) {
-        if (!CompatMods.isOculusLoaded()) {
+    private void derenderpatcher$renderBuildGuideWithVanillaBuffer(
+            Level level, BlockPos inWorldOrigin, PoseStack poseStack, MultiBufferSource getter,
+            MultiBlockDefinition structure, int packedLight, float partialTicks) {
+        if (!ShaderCompat.isShaderPackInUse()) {
             MultiBlockRenderers.renderBuildGuide(level, inWorldOrigin, poseStack, getter, structure, packedLight, partialTicks);
             return;
         }
@@ -127,11 +200,46 @@ public class MixinRenderTileEnergyCore {
         safeGetter.endBatch();
     }
 
-    @Inject(method = "renderFancyOuterCore", at = @At("HEAD"))
-    private void derenderpatcher$selectCoreShaderType(TileEnergyCore te, CCRenderState ccrs, Matrix4 mat,
-                                                      MultiBufferSource getter, float partialTicks,
-                                                      float rotation, double scale, CallbackInfo ci) {
-        derenderpatcher$currentCoreShaderType = derenderpatcher$getCoreShaderType(te);
+    @Inject(method = "render", at = @At("HEAD"))
+    private void derenderpatcher$enterEnergyCoreRender(TileEnergyCore te, float partialTicks, PoseStack poseStack,
+                                                       MultiBufferSource getter, int packedLight, int packedOverlay,
+                                                       CallbackInfo ci) {
+        derenderpatcher$session.enter();
+    }
+
+    @Inject(method = "render", at = @At("RETURN"))
+    private void derenderpatcher$exitEnergyCoreRender(TileEnergyCore te, float partialTicks, PoseStack poseStack,
+                                                      MultiBufferSource getter, int packedLight, int packedOverlay,
+                                                      CallbackInfo ci) {
+        derenderpatcher$session.exit();
+    }
+
+    @Redirect(
+            method = "renderInnerCore",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lcodechicken/lib/render/CCRenderState;bind(Lnet/minecraft/client/renderer/RenderType;Lnet/minecraft/client/renderer/MultiBufferSource;)V"
+            )
+    )
+    private void derenderpatcher$bindInnerCore(CCRenderState ccrs, RenderType renderType, MultiBufferSource getter,
+                                               TileEnergyCore te, CCRenderState methodCcrs, Matrix4 mat,
+                                               MultiBufferSource methodGetter, float partialTicks,
+                                               float rotation, double scale) {
+        derenderpatcher$session.bind(ccrs, renderType, getter);
+    }
+
+    @Redirect(
+            method = "renderLegacyOuterCore",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lcodechicken/lib/render/CCRenderState;bind(Lnet/minecraft/client/renderer/RenderType;Lnet/minecraft/client/renderer/MultiBufferSource;)V"
+            )
+    )
+    private void derenderpatcher$bindLegacyOuterCore(CCRenderState ccrs, RenderType renderType, MultiBufferSource getter,
+                                                     TileEnergyCore te, CCRenderState methodCcrs, Matrix4 mat,
+                                                     MultiBufferSource methodGetter, float partialTicks,
+                                                     float rotation, double scale) {
+        derenderpatcher$session.bind(ccrs, renderType, getter);
     }
 
     @Redirect(
@@ -141,80 +249,61 @@ public class MixinRenderTileEnergyCore {
                     target = "Lcodechicken/lib/render/CCRenderState;bind(Lnet/minecraft/client/renderer/RenderType;Lnet/minecraft/client/renderer/MultiBufferSource;)V"
             )
     )
-    private void derenderpatcher$bindColorIsolatedCoreShader(CCRenderState ccrs, RenderType renderType, MultiBufferSource getter) {
-        ccrs.bind(derenderpatcher$currentCoreShaderType == null ? renderType : derenderpatcher$currentCoreShaderType, getter);
-    }
-
-    @Inject(method = "renderFancyOuterCore", at = @At("TAIL"))
-    private void derenderpatcher$flushCoreShaderBatchAfterVertices(TileEnergyCore te, CCRenderState ccrs, Matrix4 mat,
-                                                                   MultiBufferSource getter, float partialTicks,
-                                                                   float rotation, double scale, CallbackInfo ci) {
-        derenderpatcher$endCoreShaderBatch(getter, derenderpatcher$currentCoreShaderType);
-        derenderpatcher$currentCoreShaderType = null;
-    }
-
-    @Unique
-    private static RenderType derenderpatcher$getCoreShaderType(TileEnergyCore te) {
-        boolean tierEight = te.tier.get() == 8;
-        int frame;
-        int triangle;
-        int effect;
-
-        if (te.customColour.get()) {
-            frame = te.frameColour.get();
-            triangle = te.innerColour.get();
-            effect = te.effectColour.get();
-        } else {
-            frame = tierEight ? TileEnergyCore.DEFAULT_FRAME_COLOUR_T8 : TileEnergyCore.DEFAULT_FRAME_COLOUR;
-            triangle = tierEight ? TileEnergyCore.DEFAULT_TRIANGLE_COLOUR_T8 : TileEnergyCore.DEFAULT_TRIANGLE_COLOUR;
-            effect = tierEight ? TileEnergyCore.DEFAULT_EFFECT_COLOUR_T8 : TileEnergyCore.DEFAULT_EFFECT_COLOUR;
-        }
-
-        String key = Integer.toHexString(frame) + "_" + Integer.toHexString(triangle) + "_" + Integer.toHexString(effect);
-        return DERENDERPATCHER$COLORED_CORE_TYPES.computeIfAbsent(key, ignored -> derenderpatcher$createCoreShaderType(key, frame, triangle, effect));
-    }
-
-    @Unique
-    private static RenderType derenderpatcher$createCoreShaderType(String key, int frame, int triangle, int effect) {
-        float[] frameRgb = derenderpatcher$unpack(frame);
-        float[] triangleRgb = derenderpatcher$unpack(triangle);
-        float[] effectRgb = derenderpatcher$unpack(effect);
-
-        return RenderType.create("derenderpatcher_energy_core_" + key, RenderFormats.positionColorTexLightmap(), VertexFormat.Mode.QUADS, 256, false, true, RenderType.CompositeState.builder()
-                .setTextureState(new RenderStateShard.TextureStateShard(DERENDERPATCHER$ENERGY_CORE_OVERLAY, false, false))
-                .setShaderState(new RenderStateShard.ShaderStateShard(() -> {
-                    derenderpatcher$applyCoreUniforms(frameRgb, triangleRgb, effectRgb);
-                    return DEShaders.energyCoreShader;
-                }))
-                .setTransparencyState(RenderStateAccess.translucentTransparency())
-                .setCullState(RenderStateAccess.noCull())
-                .createCompositeState(false)
-        );
-    }
-
-    @Unique
-    private static void derenderpatcher$applyCoreUniforms(float[] frameRgb, float[] triangleRgb, float[] effectRgb) {
-        DEShaders.energyCoreActivation.glUniform1f(1);
-        DEShaders.energyCoreFrameColour.glUniform3f(frameRgb[0], frameRgb[1], frameRgb[2]);
-        DEShaders.energyCoreRotTriColour.glUniform3f(triangleRgb[0], triangleRgb[1], triangleRgb[2]);
-        DEShaders.energyCoreEffectColour.glUniform3f(effectRgb[0], effectRgb[1], effectRgb[2]);
-    }
-
-    @Unique
-    private static float[] derenderpatcher$unpack(int colour) {
-        return new float[]{((colour >> 16) & 0xFF) / 255F, ((colour >> 8) & 0xFF) / 255F, (colour & 0xFF) / 255F};
-    }
-
-    @Unique
-    private static void derenderpatcher$endCoreShaderBatch(MultiBufferSource getter, RenderType renderType) {
-        if (renderType == null) {
+    private void derenderpatcher$bindFancyOuterCore(CCRenderState ccrs, RenderType renderType, MultiBufferSource getter,
+                                                    TileEnergyCore te, CCRenderState methodCcrs, Matrix4 mat,
+                                                    MultiBufferSource methodGetter, float partialTicks,
+                                                    float rotation, double scale) {
+        if (!derenderpatcher$session.isActive()) {
+            ccrs.bind(renderType, getter);
             return;
         }
 
-        if (getter instanceof MultiBufferSource.BufferSource bufferSource) {
-            bufferSource.endBatch(renderType);
-        } else {
-            Minecraft.getInstance().renderBuffers().bufferSource().endBatch(renderType);
+        RenderType selectedRenderType = EnergyCoreShaderTypes.getCoreShaderType(te);
+        derenderpatcher$session.bind(ccrs, selectedRenderType, getter);
+    }
+
+    @Inject(
+            method = "renderLegacyOuterCore",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lcodechicken/lib/render/CCRenderState;bind(Lnet/minecraft/client/renderer/RenderType;Lnet/minecraft/client/renderer/MultiBufferSource;)V"
+            )
+    )
+    private void derenderpatcher$setLegacyOuterCoreColour(TileEnergyCore te, CCRenderState ccrs, Matrix4 mat,
+                                                           MultiBufferSource getter, float partialTicks,
+                                                           float rotation, double scale, CallbackInfo ci) {
+        if (!ShaderCompat.isShaderPackInUse()) {
+            ccrs.baseColour = EnergyCoreShaderTypes.getLegacyCoreOverlayColour(te);
         }
+    }
+
+    @Inject(method = {"renderInnerCore", "renderLegacyOuterCore"}, at = @At("RETURN"))
+    private void derenderpatcher$flushCoreBuffer(TileEnergyCore te, CCRenderState ccrs, Matrix4 mat,
+                                                 MultiBufferSource getter, float partialTicks, float rotation,
+                                                 double scale, CallbackInfo ci) {
+        derenderpatcher$session.flush();
+    }
+
+    @Inject(method = "renderFancyOuterCore", at = @At("RETURN"))
+    private void derenderpatcher$flushFancyCoreBuffer(TileEnergyCore te, CCRenderState ccrs, Matrix4 mat,
+                                                       MultiBufferSource getter, float partialTicks, float rotation,
+                                                       double scale, CallbackInfo ci) {
+        derenderpatcher$session.flush();
+    }
+
+    @Inject(method = "renderStabilizers", at = @At("HEAD"), cancellable = true)
+    private void derenderpatcher$renderStabilizersWithPrivateBuffers(TileEnergyCore te, CCRenderState ccrs, Matrix4 matrix4,
+                                                                     MultiBufferSource getter, float partialTick,
+                                                                     CallbackInfo ci) {
+        if (!ShaderCompat.isShaderPackInUse()) {
+            return;
+        }
+
+        ci.cancel();
+        derenderpatcher$stabilizerRenderer.renderStabilizers(
+                te, ccrs, matrix4, partialTick,
+                modelStabilizerSphere,
+                innerStabType, outerStabType, beamType, outerBeamType,
+                this::renderStabilizerBeam);
     }
 }
