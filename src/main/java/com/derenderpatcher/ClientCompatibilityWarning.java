@@ -24,7 +24,7 @@ public final class ClientCompatibilityWarning {
                     "You're running a beta version of Draconic Evolution Render Patcher. "
                             + "If you encounter a bug or crash, please report it on "
             ).withStyle(ChatFormatting.YELLOW);
-            Component issueTrackerLink = Component.literal("GitHub Issues")
+            Component issueTrackerLink = Component.literal("GitHub")
                     .withStyle(style -> style
                             .withColor(ChatFormatting.AQUA)
                             .withUnderlined(true)

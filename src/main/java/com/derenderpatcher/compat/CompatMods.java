@@ -1,9 +1,9 @@
 package com.derenderpatcher.compat;
 
+import net.minecraftforge.fml.ModList;
+
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public final class CompatMods {
     private static final Set<String> UNSUPPORTED_FABRIC_RENDER_STACK = Set.of(
@@ -31,65 +31,25 @@ public final class CompatMods {
     }
 
     public static boolean isUnsupportedFabricRenderStackLoaded() {
-        return !getLoadedUnsupportedFabricRenderMods().isEmpty();
+        return UNSUPPORTED_FABRIC_RENDER_STACK.stream().anyMatch(CompatMods::isModLoaded);
     }
 
     public static List<String> getLoadedUnsupportedFabricRenderMods() {
         return UNSUPPORTED_FABRIC_RENDER_STACK.stream()
                 .filter(CompatMods::isModLoaded)
                 .sorted()
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public static boolean isModLoaded(String modId) {
-        Object modList = getForgeModList();
-        if (modList == null) {
-            return false;
-        }
-
-        try {
-            return (Boolean) modList.getClass()
-                    .getMethod("isLoaded", String.class)
-                    .invoke(modList, modId);
-        } catch (ReflectiveOperationException | RuntimeException | LinkageError ignored) {
-            return false;
-        }
+        return ModList.get().isLoaded(modId);
     }
 
     public static String getModVersion(String modId) {
-        Object modList = getForgeModList();
-        if (modList == null) {
-            return "unknown";
-        }
-
-        try {
-            Object optionalContainer = modList.getClass()
-                    .getMethod("getModContainerById", String.class)
-                    .invoke(modList, modId);
-            if (!(optionalContainer instanceof Optional<?> optional) || optional.isEmpty()) {
-                return "unknown";
-            }
-
-            Object container = optional.get();
-            Object modInfo = container.getClass()
-                    .getMethod("getModInfo")
-                    .invoke(container);
-            Object version = modInfo.getClass()
-                    .getMethod("getVersion")
-                    .invoke(modInfo);
-            return version.toString();
-        } catch (ReflectiveOperationException | RuntimeException | LinkageError ignored) {
-            return "unknown";
-        }
-    }
-
-    private static Object getForgeModList() {
-        try {
-            Class<?> modListClass = Class.forName("net.minecraftforge.fml.ModList");
-            return modListClass.getMethod("get").invoke(null);
-        } catch (ReflectiveOperationException | RuntimeException | LinkageError ignored) {
-            return null;
-        }
+        return ModList.get()
+                .getModContainerById(modId)
+                .map(container -> container.getModInfo().getVersion().toString())
+                .orElse("unknown");
     }
 
     private CompatMods() {

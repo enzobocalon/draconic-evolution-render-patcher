@@ -13,7 +13,6 @@ import com.derenderpatcher.compat.CompatMods;
 import com.derenderpatcher.compat.DraconicBlockEntityRenderSession;
 import com.derenderpatcher.compat.EnergyCoreShaderTypes;
 import com.derenderpatcher.compat.EnergyCoreStabilizerRenderer;
-import com.derenderpatcher.compat.RenderFormats;
 import com.derenderpatcher.compat.RenderStateAccess;
 import com.derenderpatcher.compat.ShaderCompat;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -41,19 +40,27 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinRenderTileEnergyCore {
     @Unique
     private static final ResourceLocation DERENDERPATCHER$ENERGY_CORE_BASE =
-            new ResourceLocation(DraconicEvolution.MODID, "textures/block/energy_core/energy_core_base.png");
+            ResourceLocation.fromNamespaceAndPath(
+                    DraconicEvolution.MODID,
+                    "textures/block/energy_core/energy_core_base.png");
 
     @Unique
     private static final ResourceLocation DERENDERPATCHER$ENERGY_CORE_OVERLAY =
-            new ResourceLocation(DraconicEvolution.MODID, "textures/block/energy_core/energy_core_overlay.png");
+            ResourceLocation.fromNamespaceAndPath(
+                    DraconicEvolution.MODID,
+                    "textures/block/energy_core/energy_core_overlay.png");
 
     @Unique
     private static final ResourceLocation DERENDERPATCHER$STABILIZER_SPHERE =
-            new ResourceLocation(DraconicEvolution.MODID, "textures/block/energy_core/stabilizer_sphere.png");
+            ResourceLocation.fromNamespaceAndPath(
+                    DraconicEvolution.MODID,
+                    "textures/block/energy_core/stabilizer_sphere.png");
 
     @Unique
     private static final ResourceLocation DERENDERPATCHER$STABILIZER_BEAM =
-            new ResourceLocation(DraconicEvolution.MODID, "textures/block/energy_core/stabilizer_beam.png");
+            ResourceLocation.fromNamespaceAndPath(
+                    DraconicEvolution.MODID,
+                    "textures/block/energy_core/stabilizer_beam.png");
 
     @Mutable
     @Shadow
@@ -112,7 +119,7 @@ public class MixinRenderTileEnergyCore {
 
         outerCoreType = RenderType.create(
                 DraconicEvolution.MODID + ":derenderpatcher_outer_core",
-                RenderFormats.newEntity(), VertexFormat.Mode.QUADS, 256, false, true,
+                DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 256, false, true,
                 RenderType.CompositeState.builder()
                         .setTextureState(new RenderStateShard.TextureStateShard(DERENDERPATCHER$ENERGY_CORE_OVERLAY, false, false))
                         .setShaderState(new RenderStateShard.ShaderStateShard(() -> com.brandon3055.brandonscore.client.shader.BCShaders.posColourTexAlpha0))
@@ -121,7 +128,7 @@ public class MixinRenderTileEnergyCore {
 
         innerStabType = RenderType.create(
                 DraconicEvolution.MODID + ":derenderpatcher_inner_stab",
-                RenderFormats.positionColorTexLightmap(), VertexFormat.Mode.QUADS, 256, false, true,
+                DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, VertexFormat.Mode.QUADS, 256, false, true,
                 RenderType.CompositeState.builder()
                         .setTextureState(new RenderStateShard.TextureStateShard(DERENDERPATCHER$STABILIZER_SPHERE, false, false))
                         .setShaderState(new RenderStateShard.ShaderStateShard(() -> com.brandon3055.brandonscore.client.shader.BCShaders.posColourTexAlpha0))
@@ -130,7 +137,7 @@ public class MixinRenderTileEnergyCore {
 
         outerStabType = RenderType.create(
                 DraconicEvolution.MODID + ":derenderpatcher_outer_stab",
-                RenderFormats.positionColorTexLightmap(), VertexFormat.Mode.QUADS, 256, false, true,
+                DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, VertexFormat.Mode.QUADS, 256, false, true,
                 RenderType.CompositeState.builder()
                         .setTextureState(new RenderStateShard.TextureStateShard(DERENDERPATCHER$STABILIZER_SPHERE, false, false))
                         .setShaderState(new RenderStateShard.ShaderStateShard(() -> com.brandon3055.brandonscore.client.shader.BCShaders.posColourTexAlpha0))
@@ -158,7 +165,7 @@ public class MixinRenderTileEnergyCore {
 
         coreShaderType = RenderType.create(
                 DraconicEvolution.MODID + ":derenderpatcher_energy_core_shader",
-                RenderFormats.positionColorTexLightmap(), VertexFormat.Mode.QUADS, 256, false, true,
+                DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, VertexFormat.Mode.QUADS, 256, false, true,
                 RenderType.CompositeState.builder()
                         .setTextureState(new RenderStateShard.TextureStateShard(DERENDERPATCHER$ENERGY_CORE_OVERLAY, false, false))
                         .setShaderState(new RenderStateShard.ShaderStateShard(() -> DEShaders.energyCoreShader))
@@ -171,7 +178,7 @@ public class MixinRenderTileEnergyCore {
     private static RenderType derenderpatcher$createEntitySolidType(String name, ResourceLocation texture) {
         return RenderType.create(
                 DraconicEvolution.MODID + ":derenderpatcher_" + name,
-                RenderFormats.newEntity(), VertexFormat.Mode.QUADS, 256, true, false,
+                DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 256, true, false,
                 RenderType.CompositeState.builder()
                         .setTextureState(new RenderStateShard.TextureStateShard(texture, false, false))
                         .setShaderState(new RenderStateShard.ShaderStateShard(GameRenderer::getRendertypeEntitySolidShader))

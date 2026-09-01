@@ -31,10 +31,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = RenderTileReactorComponent.class, remap = false)
 public abstract class MixinRenderTileReactorComponent implements BlockEntityRenderer<TileReactorComponent> {
     @Unique
-    private static final ResourceLocation DERENDERPATCHER$REACTOR_STABILIZER = new ResourceLocation(DraconicEvolution.MODID, "textures/block/reactor/reactor_stabilizer.png");
+    private static final ResourceLocation DERENDERPATCHER$REACTOR_STABILIZER =
+            ResourceLocation.fromNamespaceAndPath(
+                    DraconicEvolution.MODID,
+                    "textures/block/reactor/reactor_stabilizer.png");
 
     @Unique
-    private static final ResourceLocation DERENDERPATCHER$REACTOR_INJECTOR = new ResourceLocation(DraconicEvolution.MODID, "textures/block/reactor/reactor_injector.png");
+    private static final ResourceLocation DERENDERPATCHER$REACTOR_INJECTOR =
+            ResourceLocation.fromNamespaceAndPath(
+                    DraconicEvolution.MODID,
+                    "textures/block/reactor/reactor_injector.png");
 
     @Mutable
     @Shadow

@@ -6,8 +6,8 @@ import com.brandon3055.draconicevolution.client.render.tile.RenderEnergyCoreStab
 import com.brandon3055.draconicevolution.DraconicEvolution;
 import com.derenderpatcher.compat.CompatMods;
 import com.derenderpatcher.compat.DraconicBlockEntityRenderSession;
-import com.derenderpatcher.compat.RenderFormats;
 import com.derenderpatcher.compat.RenderStateAccess;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.renderer.GameRenderer;
@@ -30,7 +30,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinRenderEnergyCoreStabilizer implements BlockEntityRenderer<TileEnergyCoreStabilizer> {
     @Unique
     private static final ResourceLocation DERENDERPATCHER$STABILIZER_LARGE =
-            new ResourceLocation(DraconicEvolution.MODID, "textures/block/energy_core/stabilizer_large.png");
+            ResourceLocation.fromNamespaceAndPath(
+                    DraconicEvolution.MODID,
+                    "textures/block/energy_core/stabilizer_large.png");
 
     @Shadow
     @Final
@@ -52,7 +54,7 @@ public abstract class MixinRenderEnergyCoreStabilizer implements BlockEntityRend
 
         MODEL_TYPE_ACTIVE = RenderType.create(
                 DraconicEvolution.MODID + ":derenderpatcher_energy_core_stabilizer_active",
-                RenderFormats.positionColorTexLightmap(), VertexFormat.Mode.QUADS, 256, false, true,
+                DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, VertexFormat.Mode.QUADS, 256, false, true,
                 RenderType.CompositeState.builder()
                         .setTextureState(new RenderStateShard.TextureStateShard(DERENDERPATCHER$STABILIZER_LARGE, false, false))
                         .setShaderState(new RenderStateShard.ShaderStateShard(GameRenderer::getPositionColorTexLightmapShader))

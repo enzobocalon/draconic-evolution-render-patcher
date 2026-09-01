@@ -4,6 +4,7 @@ import codechicken.lib.render.shader.CCUniform;
 import com.brandon3055.draconicevolution.DraconicEvolution;
 import com.brandon3055.draconicevolution.blocks.tileentity.TileEnergyCore;
 import com.brandon3055.draconicevolution.client.DEShaders;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
@@ -28,7 +29,9 @@ public final class EnergyCoreShaderTypes {
     private static final int MAX_CORE_SHADER_TYPES = 256;
 
     private static final ResourceLocation ENERGY_CORE_OVERLAY =
-            new ResourceLocation(DraconicEvolution.MODID, "textures/block/energy_core/energy_core_overlay.png");
+            ResourceLocation.fromNamespaceAndPath(
+                    DraconicEvolution.MODID,
+                    "textures/block/energy_core/energy_core_overlay.png");
 
     private static final Map<String, RenderType> CORE_SHADER_TYPES = new LinkedHashMap<>(32, 0.75F, true) {
         @Override
@@ -81,7 +84,7 @@ public final class EnergyCoreShaderTypes {
     private static RenderType createCoreShaderType(String key, int frameColour, int triangleColour, int effectColour) {
         return RenderType.create(
                 DraconicEvolution.MODID + ":derenderpatcher_energy_core_shader_" + key,
-                RenderFormats.positionColorTexLightmap(),
+                DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP,
                 VertexFormat.Mode.QUADS, 256, false, true,
                 RenderType.CompositeState.builder()
                         .setTextureState(new RenderStateShard.TextureStateShard(ENERGY_CORE_OVERLAY, false, false))
