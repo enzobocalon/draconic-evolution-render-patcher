@@ -6,8 +6,8 @@ import codechicken.lib.render.pipeline.IVertexOperation;
 import com.brandon3055.brandonscore.api.TechLevel;
 import com.brandon3055.draconicevolution.client.render.item.RenderItemEnergyCrystal;
 import com.brandon3055.draconicevolution.client.render.tile.RenderTileEnergyCrystal;
+import com.derenderpatcher.compat.DraconicImmediateRenderSession;
 import com.derenderpatcher.compat.EnergyCrystalRenderTypes;
-import com.derenderpatcher.compat.DraconicItemRenderSession;
 import com.derenderpatcher.compat.ShaderCompat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -28,7 +28,8 @@ public class MixinRenderItemEnergyCrystal {
     private TechLevel techLevel;
 
     @Unique
-    private final DraconicItemRenderSession derenderpatcher$session = new DraconicItemRenderSession(512 * 1024);
+    private final DraconicImmediateRenderSession derenderpatcher$session =
+            new DraconicImmediateRenderSession(512 * 1024);
 
     @Redirect(
             method = "renderItem",

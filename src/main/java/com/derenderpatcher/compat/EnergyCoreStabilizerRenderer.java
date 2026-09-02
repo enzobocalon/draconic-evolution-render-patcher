@@ -119,6 +119,4 @@ public final class EnergyCoreStabilizerRenderer {
         void render(TileEnergyCore te, Matrix4 matrix4, MultiBufferSource getter, BlockPos vec, float partialTick);
     }
 
-    public EnergyCoreStabilizerRenderer() {
-    }
 }

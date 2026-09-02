@@ -5,13 +5,18 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 
-/** Owns one immediate buffer and the Draconic shader lifecycle for an item draw. */
-public final class DraconicItemRenderSession {
+public final class DraconicImmediateRenderSession {
     private final MultiBufferSource.BufferSource buffers;
+    private final boolean bindWriteTargetBeforeFlush;
     private boolean active;
 
-    public DraconicItemRenderSession(int initialBytes) {
+    public DraconicImmediateRenderSession(int initialBytes) {
+        this(initialBytes, true);
+    }
+
+    public DraconicImmediateRenderSession(int initialBytes, boolean bindWriteTargetBeforeFlush) {
         this.buffers = MultiBufferSource.immediate(new BufferBuilder(initialBytes));
+        this.bindWriteTargetBeforeFlush = bindWriteTargetBeforeFlush;
     }
 
     public void bind(CCRenderState ccrs, RenderType type, MultiBufferSource original) {
@@ -39,13 +44,19 @@ public final class DraconicItemRenderSession {
         return this.buffers;
     }
 
+    public MultiBufferSource select(MultiBufferSource original) {
+        return this.active ? this.buffers : original;
+    }
+
     public void finish() {
         if (!this.active) {
             return;
         }
 
         try {
-            ShaderCompat.bindPipelineWriteTargetBeforeBatchedVboDraw();
+            if (this.bindWriteTargetBeforeFlush) {
+                ShaderCompat.bindPipelineWriteTargetBeforeBatchedVboDraw();
+            }
             this.buffers.endBatch();
         } finally {
             this.active = false;

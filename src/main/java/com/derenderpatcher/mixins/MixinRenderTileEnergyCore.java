@@ -5,26 +5,18 @@ import codechicken.lib.render.CCRenderState;
 import codechicken.lib.vec.Matrix4;
 import com.brandon3055.brandonscore.client.render.MultiBlockRenderers;
 import com.brandon3055.brandonscore.multiblock.MultiBlockDefinition;
-import com.brandon3055.draconicevolution.DraconicEvolution;
 import com.brandon3055.draconicevolution.blocks.tileentity.TileEnergyCore;
-import com.brandon3055.draconicevolution.client.DEShaders;
 import com.brandon3055.draconicevolution.client.render.tile.RenderTileEnergyCore;
-import com.derenderpatcher.compat.CompatMods;
 import com.derenderpatcher.compat.DraconicBlockEntityRenderSession;
+import com.derenderpatcher.compat.EnergyCoreRenderTypes;
 import com.derenderpatcher.compat.EnergyCoreShaderTypes;
 import com.derenderpatcher.compat.EnergyCoreStabilizerRenderer;
-import com.derenderpatcher.compat.RenderStateAccess;
 import com.derenderpatcher.compat.ShaderCompat;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,30 +30,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = RenderTileEnergyCore.class, remap = false)
 public class MixinRenderTileEnergyCore {
-    @Unique
-    private static final ResourceLocation DERENDERPATCHER$ENERGY_CORE_BASE =
-            ResourceLocation.fromNamespaceAndPath(
-                    DraconicEvolution.MODID,
-                    "textures/block/energy_core/energy_core_base.png");
-
-    @Unique
-    private static final ResourceLocation DERENDERPATCHER$ENERGY_CORE_OVERLAY =
-            ResourceLocation.fromNamespaceAndPath(
-                    DraconicEvolution.MODID,
-                    "textures/block/energy_core/energy_core_overlay.png");
-
-    @Unique
-    private static final ResourceLocation DERENDERPATCHER$STABILIZER_SPHERE =
-            ResourceLocation.fromNamespaceAndPath(
-                    DraconicEvolution.MODID,
-                    "textures/block/energy_core/stabilizer_sphere.png");
-
-    @Unique
-    private static final ResourceLocation DERENDERPATCHER$STABILIZER_BEAM =
-            ResourceLocation.fromNamespaceAndPath(
-                    DraconicEvolution.MODID,
-                    "textures/block/energy_core/stabilizer_beam.png");
-
     @Mutable
     @Shadow
     @Final
@@ -111,80 +79,14 @@ public class MixinRenderTileEnergyCore {
 
     @Inject(method = "<clinit>", at = @At("RETURN"))
     private static void derenderpatcher$replaceEnergyCoreRenderTypes(CallbackInfo ci) {
-        if (!CompatMods.isOculusLoaded()) {
-            return;
-        }
-
-        innerCoreType = derenderpatcher$createEntitySolidType("inner_core", DERENDERPATCHER$ENERGY_CORE_BASE);
-
-        outerCoreType = RenderType.create(
-                DraconicEvolution.MODID + ":derenderpatcher_outer_core",
-                DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 256, false, true,
-                RenderType.CompositeState.builder()
-                        .setTextureState(new RenderStateShard.TextureStateShard(DERENDERPATCHER$ENERGY_CORE_OVERLAY, false, false))
-                        .setShaderState(new RenderStateShard.ShaderStateShard(() -> com.brandon3055.brandonscore.client.shader.BCShaders.posColourTexAlpha0))
-                        .setTransparencyState(RenderStateAccess.translucentTransparency())
-                        .createCompositeState(false));
-
-        innerStabType = RenderType.create(
-                DraconicEvolution.MODID + ":derenderpatcher_inner_stab",
-                DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, VertexFormat.Mode.QUADS, 256, false, true,
-                RenderType.CompositeState.builder()
-                        .setTextureState(new RenderStateShard.TextureStateShard(DERENDERPATCHER$STABILIZER_SPHERE, false, false))
-                        .setShaderState(new RenderStateShard.ShaderStateShard(() -> com.brandon3055.brandonscore.client.shader.BCShaders.posColourTexAlpha0))
-                        .setTransparencyState(RenderStateAccess.noTransparency())
-                        .createCompositeState(false));
-
-        outerStabType = RenderType.create(
-                DraconicEvolution.MODID + ":derenderpatcher_outer_stab",
-                DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, VertexFormat.Mode.QUADS, 256, false, true,
-                RenderType.CompositeState.builder()
-                        .setTextureState(new RenderStateShard.TextureStateShard(DERENDERPATCHER$STABILIZER_SPHERE, false, false))
-                        .setShaderState(new RenderStateShard.ShaderStateShard(() -> com.brandon3055.brandonscore.client.shader.BCShaders.posColourTexAlpha0))
-                        .setTransparencyState(RenderStateAccess.translucentTransparency())
-                        .createCompositeState(false));
-
-        beamType = RenderType.create(
-                "derenderpatcher_inner_beam",
-                DefaultVertexFormat.POSITION_TEX, VertexFormat.Mode.QUADS, 256, false, true,
-                RenderType.CompositeState.builder()
-                        .setTextureState(new RenderStateShard.TextureStateShard(DERENDERPATCHER$STABILIZER_BEAM, false, false))
-                        .setShaderState(new RenderStateShard.ShaderStateShard(GameRenderer::getPositionTexShader))
-                        .setTransparencyState(RenderStateAccess.translucentTransparency())
-                        .createCompositeState(false));
-
-        outerBeamType = RenderType.create(
-                "derenderpatcher_outer_beam",
-                DefaultVertexFormat.POSITION_COLOR_TEX, VertexFormat.Mode.TRIANGLE_STRIP, 256, false, false,
-                RenderType.CompositeState.builder()
-                        .setTextureState(new RenderStateShard.TextureStateShard(DERENDERPATCHER$STABILIZER_BEAM, false, false))
-                        .setShaderState(new RenderStateShard.ShaderStateShard(() -> com.brandon3055.brandonscore.client.shader.BCShaders.posColourTexAlpha0))
-                        .setTransparencyState(RenderStateAccess.translucentTransparency())
-                        .setWriteMaskState(RenderStateAccess.colorWrite())
-                        .createCompositeState(false));
-
-        coreShaderType = RenderType.create(
-                DraconicEvolution.MODID + ":derenderpatcher_energy_core_shader",
-                DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, VertexFormat.Mode.QUADS, 256, false, true,
-                RenderType.CompositeState.builder()
-                        .setTextureState(new RenderStateShard.TextureStateShard(DERENDERPATCHER$ENERGY_CORE_OVERLAY, false, false))
-                        .setShaderState(new RenderStateShard.ShaderStateShard(() -> DEShaders.energyCoreShader))
-                        .setTransparencyState(RenderStateAccess.translucentTransparency())
-                        .setCullState(RenderStateAccess.noCull())
-                        .createCompositeState(false));
-    }
-
-    @Unique
-    private static RenderType derenderpatcher$createEntitySolidType(String name, ResourceLocation texture) {
-        return RenderType.create(
-                DraconicEvolution.MODID + ":derenderpatcher_" + name,
-                DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 256, true, false,
-                RenderType.CompositeState.builder()
-                        .setTextureState(new RenderStateShard.TextureStateShard(texture, false, false))
-                        .setShaderState(new RenderStateShard.ShaderStateShard(GameRenderer::getRendertypeEntitySolidShader))
-                        .setLightmapState(RenderStateAccess.lightmap())
-                        .setOverlayState(RenderStateAccess.overlay())
-                        .createCompositeState(true));
+        EnergyCoreRenderTypes.Types types = EnergyCoreRenderTypes.create();
+        innerCoreType = types.innerCore();
+        outerCoreType = types.outerCore();
+        innerStabType = types.innerStabilizer();
+        outerStabType = types.outerStabilizer();
+        beamType = types.innerBeam();
+        outerBeamType = types.outerBeam();
+        coreShaderType = types.coreShader();
     }
 
     @Redirect(

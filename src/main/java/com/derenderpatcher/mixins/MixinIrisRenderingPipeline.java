@@ -1,10 +1,10 @@
 package com.derenderpatcher.mixins;
 
+import com.derenderpatcher.compat.PipelineWriteTargetAccess;
 import com.derenderpatcher.compat.ShaderCompat;
 import com.google.common.collect.ImmutableSet;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
-import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.shaderpack.programs.ProgramSet;
 import net.irisshaders.iris.targets.RenderTargets;
 import org.spongepowered.asm.mixin.Final;
@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = IrisRenderingPipeline.class, remap = false)
-public class MixinIrisRenderingPipeline {
+public class MixinIrisRenderingPipeline implements PipelineWriteTargetAccess {
     @Shadow @Final private RenderTargets renderTargets;
     @Shadow @Final private ImmutableSet<Integer> flippedAfterPrepare;
     @Shadow @Final private ImmutableSet<Integer> flippedAfterTranslucent;
@@ -44,11 +44,11 @@ public class MixinIrisRenderingPipeline {
                         + ", beforeTranslucentWritesAlt=" + flippedAfterPrepare.contains(colorTarget)
                         + ", afterTranslucentWritesAlt=" + flippedAfterTranslucent.contains(colorTarget)
         );
-        ShaderCompat.registerPipelineWriteTarget((WorldRenderingPipeline) (Object) this, this::derenderpatcher$bindPipelineWriteTarget);
     }
 
     @Unique
-    private void derenderpatcher$bindPipelineWriteTarget() {
+    @Override
+    public void derenderpatcher$bindPipelineWriteTarget() {
         if (isBeforeTranslucent) {
             derenderpatcher$writeTargetBeforeTranslucent.bind();
             ShaderCompat.debugOnce(

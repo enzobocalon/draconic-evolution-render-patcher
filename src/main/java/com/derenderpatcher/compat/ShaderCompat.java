@@ -9,91 +9,57 @@ import net.irisshaders.iris.shadows.ShadowRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
 
-import java.util.Map;
 import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 public final class ShaderCompat {
     private static final boolean DEBUG_LOGGING_ENABLED = Boolean.getBoolean("derenderpatcher.debug");
-    private static final Map<WorldRenderingPipeline, Runnable> PIPELINE_WRITE_TARGET_BINDERS = new WeakHashMap<>();
     private static final Set<String> DEBUG_MESSAGES = ConcurrentHashMap.newKeySet();
     private static final ThreadLocal<Runnable> PENDING_SHADER_UNIFORM_APPLIER = new ThreadLocal<>();
 
-    private static int worldRenderDepth;
-    private static int brandonsCoreTransparentPassDepth;
-    private static int handRenderDepth;
-    private static int draconicRenderDepth;
-
-    public static void registerPipelineWriteTarget(WorldRenderingPipeline pipeline, Runnable writeTargetBinder) {
-        PIPELINE_WRITE_TARGET_BINDERS.put(pipeline, writeTargetBinder);
-        debugOnce(
-                "pipeline-write-target-registered:" + System.identityHashCode(pipeline),
-                () -> "Registered Oculus pipeline write target binder. pipeline="
-                        + pipeline.getClass().getName()
-                        + '@' + Integer.toHexString(System.identityHashCode(pipeline))
-        );
-    }
-
     public static boolean isShaderPackInUse() {
-        if (!CompatMods.isOculusLoaded()) {
-            return false;
-        }
-
         try {
             IrisApi irisApi = IrisApi.getInstance();
             return irisApi.isShaderPackInUse() && irisApi.getConfig().areShadersEnabled();
-        } catch (RuntimeException | LinkageError ignored) {
+        } catch (RuntimeException ignored) {
             return false;
         }
     }
 
     public static void enterWorldRender() {
-        worldRenderDepth++;
+        RenderPass.WORLD.enter();
     }
 
     public static void exitWorldRender() {
-        if (worldRenderDepth > 0) {
-            worldRenderDepth--;
-        }
+        RenderPass.WORLD.exit();
         restoreMainTargetIfNoCompatPassActive();
     }
 
     public static void enterBrandonsCoreTransparentPass() {
-        brandonsCoreTransparentPassDepth++;
+        RenderPass.BRANDONS_CORE_TRANSPARENT.enter();
     }
 
     public static void exitBrandonsCoreTransparentPass() {
-        if (brandonsCoreTransparentPassDepth > 0) {
-            brandonsCoreTransparentPassDepth--;
-        }
+        RenderPass.BRANDONS_CORE_TRANSPARENT.exit();
         restoreMainTargetIfNoCompatPassActive();
     }
 
     public static void enterHandRenderPass() {
-        handRenderDepth++;
+        RenderPass.HAND.enter();
     }
 
     public static void exitHandRenderPass() {
-        if (handRenderDepth > 0) {
-            handRenderDepth--;
-        }
+        RenderPass.HAND.exit();
         restoreMainTargetIfNoCompatPassActive();
     }
 
-    public static boolean isHandRenderPassActive() {
-        return isShaderPackInUse() && isWorldViewRendering() && handRenderDepth > 0;
-    }
-
     public static void enterDraconicRender() {
-        draconicRenderDepth++;
+        RenderPass.DRACONIC.enter();
     }
 
     public static void exitDraconicRender() {
-        if (draconicRenderDepth > 0) {
-            draconicRenderDepth--;
-        }
+        RenderPass.DRACONIC.exit();
     }
 
     private static boolean isCompatRenderPassActive() {
@@ -101,14 +67,14 @@ public final class ShaderCompat {
             return false;
         }
 
-        return brandonsCoreTransparentPassDepth > 0
-                || handRenderDepth > 0
-                || (draconicRenderDepth > 0 && isWorldViewRendering())
+        return RenderPass.BRANDONS_CORE_TRANSPARENT.isActive()
+                || RenderPass.HAND.isActive()
+                || (RenderPass.DRACONIC.isActive() && isWorldViewRendering())
                 || isCompatPipelinePhaseActive();
     }
 
     private static boolean isWorldViewRendering() {
-        return Minecraft.getInstance().level != null && worldRenderDepth > 0;
+        return Minecraft.getInstance().level != null && RenderPass.WORLD.isActive();
     }
 
     private static boolean isClientLevelActive() {
@@ -136,12 +102,12 @@ public final class ShaderCompat {
         return isShaderPackInUse()
                 && !isShadowRendererActive()
                 && isCompatRenderPassActive()
-                && draconicRenderDepth > 0
+                && RenderPass.DRACONIC.isActive()
                 && shader instanceof CCShaderInstance;
     }
 
     public static boolean isDraconicRenderActive() {
-        return draconicRenderDepth > 0;
+        return RenderPass.DRACONIC.isActive();
     }
 
     public static boolean isDebugLoggingEnabled() {
@@ -154,10 +120,10 @@ public final class ShaderCompat {
         return "shaderPack=" + isShaderPackInUse()
                 + ", oculusPipeline=" + (pipeline != null)
                 + ", shadow=" + isShadowRendererActive()
-                + ", worldDepth=" + worldRenderDepth
-                + ", brandonsTransparentDepth=" + brandonsCoreTransparentPassDepth
-                + ", handDepth=" + handRenderDepth
-                + ", draconicDepth=" + draconicRenderDepth
+                + ", worldDepth=" + RenderPass.WORLD.depth()
+                + ", brandonsTransparentDepth=" + RenderPass.BRANDONS_CORE_TRANSPARENT.depth()
+                + ", handDepth=" + RenderPass.HAND.depth()
+                + ", draconicDepth=" + RenderPass.DRACONIC.depth()
                 + ", phase=" + phase
                 + ", compatPass=" + isCompatRenderPassActive();
     }
@@ -201,26 +167,22 @@ public final class ShaderCompat {
     }
 
     public static boolean bindPipelineWriteTargetBeforeBatchedVboDraw() {
-        if (!isShaderPackInUse() || !isCompatRenderPassActive() || isShadowRendererActive() || draconicRenderDepth <= 0) {
+        if (!isShaderPackInUse() || !isCompatRenderPassActive()
+                || isShadowRendererActive() || !RenderPass.DRACONIC.isActive()) {
             return false;
         }
 
         return bindPipelineWriteTarget();
     }
 
-    public static void bindPipelineWriteTargetAfterShaderApplyBeforeDraw(ShaderInstance shader) {
-        allowUnknownShaderOutput(shader);
-    }
-
     private static boolean bindPipelineWriteTarget() {
-        // Switch writes to the write target registered for the current Oculus pipeline.
+        // Switch writes to the target exposed by the current Oculus pipeline mixin.
         WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
-        Runnable writeTargetBinder = PIPELINE_WRITE_TARGET_BINDERS.get(pipeline);
-        if (writeTargetBinder != null) {
-            writeTargetBinder.run();
+        if (pipeline instanceof PipelineWriteTargetAccess writeTargetAccess) {
+            writeTargetAccess.derenderpatcher$bindPipelineWriteTarget();
             debugOnce(
                     "pipeline-write-target-bound:" + System.identityHashCode(pipeline),
-                    () -> "Bound registered Oculus pipeline write target. pipeline="
+                    () -> "Bound Oculus pipeline write target. pipeline="
                             + pipeline.getClass().getName()
                             + '@' + Integer.toHexString(System.identityHashCode(pipeline))
                             + "; " + describeCompatState()
@@ -230,9 +192,8 @@ public final class ShaderCompat {
 
         debugOnce(
                 "pipeline-write-target-missing:" + (pipeline == null ? "null" : System.identityHashCode(pipeline)),
-                () -> "No registered Oculus pipeline write target binder was found. pipeline="
+                () -> "The current Oculus pipeline does not expose a compatible write target. pipeline="
                         + (pipeline == null ? "null" : pipeline.getClass().getName() + '@' + Integer.toHexString(System.identityHashCode(pipeline)))
-                        + ", registeredBinders=" + PIPELINE_WRITE_TARGET_BINDERS.size()
                         + "; " + describeCompatState()
         );
         return false;
@@ -257,6 +218,37 @@ public final class ShaderCompat {
             return ShadowRenderer.ACTIVE;
         } catch (LinkageError ignored) {
             return false;
+        }
+    }
+
+    private enum RenderPass {
+        WORLD,
+        BRANDONS_CORE_TRANSPARENT,
+        HAND,
+        DRACONIC;
+
+        private int depth;
+
+        void enter() {
+            depth++;
+        }
+
+        void exit() {
+            if (depth > 0) {
+                depth--;
+                return;
+            }
+            ShaderCompat.debugOnce(
+                    "unbalanced-render-pass:" + name(),
+                    () -> "Ignored unbalanced exit for render pass " + name());
+        }
+
+        boolean isActive() {
+            return depth > 0;
+        }
+
+        int depth() {
+            return depth;
         }
     }
 

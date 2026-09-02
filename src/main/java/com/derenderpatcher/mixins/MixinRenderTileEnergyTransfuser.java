@@ -1,8 +1,7 @@
 package com.derenderpatcher.mixins;
 
 import com.brandon3055.draconicevolution.client.render.tile.RenderTileEnergyTransfuser;
-import com.derenderpatcher.compat.ShaderCompat;
-import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.derenderpatcher.compat.DraconicImmediateRenderSession;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.util.FormattedCharSequence;
@@ -16,8 +15,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(value = RenderTileEnergyTransfuser.class, remap = false)
 public class MixinRenderTileEnergyTransfuser {
     @Unique
-    private final MultiBufferSource.BufferSource derenderpatcher$textBuffers =
-            MultiBufferSource.immediate(new BufferBuilder(16 * 1024));
+    private final DraconicImmediateRenderSession derenderpatcher$session =
+            new DraconicImmediateRenderSession(16 * 1024);
 
     @Group(name = "derenderpatcher$transfuserText", min = 1, max = 1)
     @Redirect(
@@ -62,20 +61,12 @@ public class MixinRenderTileEnergyTransfuser {
                                                                      int colour, boolean dropShadow, Matrix4f matrix,
                                                                      MultiBufferSource getter, Font.DisplayMode displayMode,
                                                                      int backgroundColour, int packedLight) {
-        if (!ShaderCompat.isShaderPackInUse()) {
-            return font.drawInBatch(text, x, y, colour, dropShadow, matrix, getter, displayMode, backgroundColour, packedLight);
-        }
-
-        ShaderCompat.enterDraconicRender();
+        MultiBufferSource selected = derenderpatcher$session.begin(getter);
         try {
-            return font.drawInBatch(text, x, y, colour, dropShadow, matrix, derenderpatcher$textBuffers, displayMode, backgroundColour, packedLight);
+            return font.drawInBatch(
+                    text, x, y, colour, dropShadow, matrix, selected, displayMode, backgroundColour, packedLight);
         } finally {
-            try {
-                ShaderCompat.bindPipelineWriteTargetBeforeBatchedVboDraw();
-                derenderpatcher$textBuffers.endBatch();
-            } finally {
-                ShaderCompat.exitDraconicRender();
-            }
+            derenderpatcher$session.finish();
         }
     }
 }

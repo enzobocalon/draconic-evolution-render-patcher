@@ -27,8 +27,8 @@ import net.minecraft.client.renderer.RenderType;
  *       as a safety net.</li>
  * </ul>
  *
- * <p>When Oculus is not installed the session is inert: every method degrades
- * to the original passthrough, so vanilla behaviour is unchanged.
+ * <p>Oculus is a required dependency of the patcher, so every entered session
+ * owns the private render path until {@link #exit()}.
  */
 public final class DraconicBlockEntityRenderSession {
     private final MultiBufferSource.BufferSource buffers;
@@ -44,11 +44,7 @@ public final class DraconicBlockEntityRenderSession {
     }
 
     public void enter() {
-        this.active = CompatMods.isOculusLoaded();
-        if (!this.active) {
-            return;
-        }
-
+        this.active = true;
         ShaderCompat.enterDraconicRender();
     }
 

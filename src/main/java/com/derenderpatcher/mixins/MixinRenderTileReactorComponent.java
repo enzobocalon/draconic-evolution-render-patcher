@@ -5,10 +5,8 @@ import codechicken.lib.vec.Matrix4;
 import com.brandon3055.draconicevolution.blocks.reactor.tileentity.TileReactorComponent;
 import com.brandon3055.draconicevolution.DraconicEvolution;
 import com.brandon3055.draconicevolution.client.render.tile.RenderTileReactorComponent;
-import com.derenderpatcher.compat.CompatMods;
+import com.derenderpatcher.compat.DraconicImmediateRenderSession;
 import com.derenderpatcher.compat.RenderStateAccess;
-import com.derenderpatcher.compat.ShaderCompat;
-import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
@@ -61,18 +59,11 @@ public abstract class MixinRenderTileReactorComponent implements BlockEntityRend
     }
 
     @Unique
-    private final MultiBufferSource.BufferSource derenderpatcher$reactorComponentBuffers =
-            MultiBufferSource.immediate(new BufferBuilder(512 * 1024));
-
-    @Unique
-    private boolean derenderpatcher$usingReactorComponentBuffer;
+    private final DraconicImmediateRenderSession derenderpatcher$session =
+            new DraconicImmediateRenderSession(512 * 1024, false);
 
     @Inject(method = "<clinit>", at = @At("RETURN"))
     private static void derenderpatcher$replaceGlowRenderTypes(CallbackInfo ci) {
-        if (!CompatMods.isOculusLoaded()) {
-            return;
-        }
-
         STAB_GLOW_TYPE = derenderpatcher$createReactorGlowType("stab_glow", DERENDERPATCHER$REACTOR_STABILIZER);
         INJECTOR_GLOW_TYPE = derenderpatcher$createReactorGlowType("injector_glow", DERENDERPATCHER$REACTOR_INJECTOR);
     }
@@ -91,12 +82,7 @@ public abstract class MixinRenderTileReactorComponent implements BlockEntityRend
     private void derenderpatcher$enterReactorComponentRender(TileReactorComponent tile, float partialTicks, PoseStack poseStack,
                                                             MultiBufferSource getter, int packedLight, int packedOverlay,
                                                             CallbackInfo ci) {
-        derenderpatcher$usingReactorComponentBuffer = ShaderCompat.isShaderPackInUse();
-        if (!derenderpatcher$usingReactorComponentBuffer) {
-            return;
-        }
-
-        ShaderCompat.enterDraconicRender();
+        derenderpatcher$session.begin(getter);
     }
 
     @Redirect(
@@ -128,17 +114,12 @@ public abstract class MixinRenderTileReactorComponent implements BlockEntityRend
     private void derenderpatcher$exitReactorComponentRender(TileReactorComponent tile, float partialTicks, PoseStack poseStack,
                                                            MultiBufferSource getter, int packedLight, int packedOverlay,
                                                            CallbackInfo ci) {
-        if (derenderpatcher$usingReactorComponentBuffer) {
-            derenderpatcher$reactorComponentBuffers.endBatch();
-            ShaderCompat.exitDraconicRender();
-        }
-
-        derenderpatcher$usingReactorComponentBuffer = false;
+        derenderpatcher$session.finish();
     }
 
     @Unique
     private MultiBufferSource derenderpatcher$getReactorComponentBufferOrOriginal(MultiBufferSource getter) {
-        return derenderpatcher$usingReactorComponentBuffer ? derenderpatcher$reactorComponentBuffers : getter;
+        return derenderpatcher$session.select(getter);
     }
 
     @Override

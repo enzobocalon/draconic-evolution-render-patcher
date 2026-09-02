@@ -22,10 +22,6 @@ public final class CompatMods {
             "fabric_rendering_data_attachment_v1"
     );
 
-    public static boolean isOculusLoaded() {
-        return isModLoaded("oculus");
-    }
-
     public static boolean isImmediatelyFastLoaded() {
         return isModLoaded("immediatelyfast");
     }
@@ -41,7 +37,7 @@ public final class CompatMods {
                 .toList();
     }
 
-    public static boolean isModLoaded(String modId) {
+    private static boolean isModLoaded(String modId) {
         return ModList.get().isLoaded(modId);
     }
 

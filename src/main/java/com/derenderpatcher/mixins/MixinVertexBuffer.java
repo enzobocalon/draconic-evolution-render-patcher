@@ -55,7 +55,7 @@ public class MixinVertexBuffer {
 
         if (ShaderCompat.shouldAllowUnknownShader(shader)) {
             DepthColorStorage.unlockDepthColor();
-            ShaderCompat.bindPipelineWriteTargetAfterShaderApplyBeforeDraw(shader);
+            ShaderCompat.allowUnknownShaderOutput(shader);
         }
     }
 }

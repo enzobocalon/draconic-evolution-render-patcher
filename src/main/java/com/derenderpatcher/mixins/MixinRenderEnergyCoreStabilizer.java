@@ -4,7 +4,6 @@ import codechicken.lib.render.CCRenderState;
 import com.brandon3055.draconicevolution.blocks.tileentity.TileEnergyCoreStabilizer;
 import com.brandon3055.draconicevolution.client.render.tile.RenderEnergyCoreStabilizer;
 import com.brandon3055.draconicevolution.DraconicEvolution;
-import com.derenderpatcher.compat.CompatMods;
 import com.derenderpatcher.compat.DraconicBlockEntityRenderSession;
 import com.derenderpatcher.compat.RenderStateAccess;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -48,10 +47,6 @@ public abstract class MixinRenderEnergyCoreStabilizer implements BlockEntityRend
 
     @Inject(method = "<clinit>", at = @At("RETURN"))
     private static void derenderpatcher$replaceActiveStabilizerRenderType(CallbackInfo ci) {
-        if (!CompatMods.isOculusLoaded()) {
-            return;
-        }
-
         MODEL_TYPE_ACTIVE = RenderType.create(
                 DraconicEvolution.MODID + ":derenderpatcher_energy_core_stabilizer_active",
                 DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, VertexFormat.Mode.QUADS, 256, false, true,

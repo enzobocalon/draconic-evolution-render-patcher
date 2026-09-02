@@ -30,7 +30,9 @@ public final class DebugCommand {
     private static int checkStatus(CommandContext<CommandSourceStack> context) {
         StringBuilder message = new StringBuilder()
                 .append("§6=-=-= Draconic Render Patcher =-=-=§r\n")
-                .append("§7Status Report §8|§7 Version §f").append(getModVersion()).append("§r\n\n");
+                .append("§7Status Report §8|§7 Version §f")
+                .append(CompatMods.getModVersion(DERenderPatcher.MOD_ID))
+                .append("§r\n\n");
 
         appendPatcherStatus(message);
         appendOculusStatus(message);
@@ -56,10 +58,9 @@ public final class DebugCommand {
     private static void appendOculusStatus(StringBuilder message) {
         message.append("§dOculus§r\n");
 
-        boolean loaded = CompatMods.isOculusLoaded();
-        appendLine(message, "Mod", loaded ? "§aLOADED§r" : "§7NOT FOUND§r");
-        appendLine(message, "Pipeline patch", loaded ? enabledText(true) : "§7SKIPPED§r");
-        appendLine(message, "Status", loaded ? result(true, "render target patch active") : result(true, "not required"));
+        appendLine(message, "Mod", "§aLOADED§r");
+        appendLine(message, "Pipeline patch", enabledText(true));
+        appendLine(message, "Status", result(true, "render target patch active"));
         message.append("\n");
     }
 
@@ -88,10 +89,6 @@ public final class DebugCommand {
         appendLine(message, "Stack", "§cDETECTED§r");
         appendLine(message, "Mods", "§f" + String.join(", ", loadedMods) + "§r");
         appendLine(message, "Status", result(false, "unsupported rendering environment"));
-    }
-
-    private static String getModVersion() {
-        return CompatMods.getModVersion(DERenderPatcher.MOD_ID);
     }
 
     private static String enabledText(boolean value) {

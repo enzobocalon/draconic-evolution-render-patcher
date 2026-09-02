@@ -5,7 +5,7 @@ import codechicken.lib.vec.Matrix4;
 import com.brandon3055.draconicevolution.client.render.item.RenderItemReactorComponent;
 import com.brandon3055.draconicevolution.client.render.tile.RenderTileReactorComponent;
 import com.brandon3055.draconicevolution.client.render.tile.RenderTileReactorCore;
-import com.derenderpatcher.compat.DraconicItemRenderSession;
+import com.derenderpatcher.compat.DraconicImmediateRenderSession;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.item.Item;
 import org.spongepowered.asm.mixin.Mixin;
@@ -18,7 +18,8 @@ import java.util.function.Consumer;
 @Mixin(value = RenderItemReactorComponent.class, remap = false)
 public class MixinRenderItemReactorComponent {
     @Unique
-    private final DraconicItemRenderSession derenderpatcher$session = new DraconicItemRenderSession(1024 * 1024);
+    private final DraconicImmediateRenderSession derenderpatcher$session =
+            new DraconicImmediateRenderSession(1024 * 1024);
 
     @Redirect(
             method = "renderItem",
